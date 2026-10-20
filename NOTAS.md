@@ -5,6 +5,7 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 
 ## 📍 Onde estou
 Schema SQL criado e testado (36 testes de regras de qualidade passando). Ainda sem inserção de dados nem métricas.
+O primeiro commit foi realizado.
 
 ## ➡️ PRÓXIMO PASSO (só um!)
 Rodar `pytest` na minha máquina e fazer o primeiro commit no GitHub.
@@ -38,4 +39,4 @@ Rodar `pytest` na minha máquina e fazer o primeiro commit no GitHub.
 - Parsing de demos .dem
 
 ## ❓ Dúvidas abertas
-(nenhuma por enquanto)
+Tinha muitas dúvidas quanto ao Git e GitHub, mas consegui sanar todas com ajuda de vídeos e I.A também.
