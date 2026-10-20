@@ -28,11 +28,26 @@ Rodar `pytest` na minha máquina e fazer o primeiro commit no GitHub.
 - sem valores negativos; data em AAAA-MM-DD
 
 ## 🗺️ Próximas etapas (em ordem)
-1. Funções para inserir partida e performance (src/)
-2. Métricas: K/D, KDA, HS%, ADR, KAST%, Win Rate
-3. Desempenho por mapa + Best/Worst Map
-4. CI com GitHub Actions
-5. Plano de testes e modelo de bug report
+
+1. Implementar funções para registrar e consultar partidas e performances (Python).
+2. Criar testes automatizados para as funcionalidades de registro e consulta (Pytest).
+3. Implementar consultas SQL para calcular K/D, KDA, HS%, ADR, KAST% e Win Rate.
+4. Desenvolver análises de desempenho por mapa, incluindo Best/Worst Map.
+5. Criar um plano de testes documentando cenários positivos, negativos e valores-limite.
+6. Elaborar um modelo de Bug Report para documentar defeitos encontrados.
+7. Implementar uma interface gráfica simples com Streamlit para registrar partidas e visualizar estatísticas.
+8. Desenvolver testes funcionais e de integração para validar os fluxos da aplicação.
+9. Implementar gráficos e indicadores visuais para acompanhar a evolução do desempenho.
+10. Adicionar relatórios de cobertura de testes com pytest-cov.
+11. Aprimorar a documentação do projeto com exemplos de utilização e resultados dos testes.
+
+### ✅ Etapas concluídas
+
+- Modelagem inicial do banco de dados SQLite.
+- Implementação de regras de integridade e validação dos dados.
+- Criação de 36 testes automatizados com Pytest.
+- Configuração de CI com GitHub Actions.
+- Execução bem-sucedida dos 36 testes no GitHub Actions.
 
 ## 💡 Ideias futuras (só anotar, NÃO fazer agora)
 - Tabela ROUND
