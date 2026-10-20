@@ -2,6 +2,13 @@
 
 Sistema pequeno em **Python + SQL (SQLite)** para registrar partidas de CS2, guardar dados brutos de desempenho e calcular métricas depois. Projeto de estudo com foco em **qualidade de dados** e **fundamentos de QA**.
 
+## Tecnologias utilizadas
+
+- **Python:** desenvolvimento da aplicação e processamento de dados.
+- **SQLite:** armazenamento dos dados das partidas.
+- **SQL:** modelagem, consultas e validação de dados.
+- **Pytest:** testes automatizados e validação das regras de negócio.
+
 ## Status
 MVP 1 em andamento: modelagem e schema concluídos, com testes das regras de qualidade.
 
