@@ -22,6 +22,7 @@ pytest
 ```
 
 ## Estrutura
+
 ```
 cs2-match-analyzer/
 ├── sql/
