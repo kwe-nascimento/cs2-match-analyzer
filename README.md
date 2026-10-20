@@ -23,8 +23,14 @@ pytest
 
 ## Estrutura
 ```
-sql/schema.sql      # tabelas, restrições e triggers
-src/db.py           # conexão e criação do banco
-tests/test_schema.py
-NOTAS.md            # diário de bordo do projeto
+cs2-match-analyzer/
+├── sql/
+│   └── schema.sql
+├── src/
+│   └── db.py
+├── tests/
+│   └── test_schema.py
+├── NOTAS.md
+├── README.md
+└── requirements.txt
 ```
