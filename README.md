@@ -1,4 +1,5 @@
 # Analisador de Partidas de CS2
+[![Testes automatizados](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/workflows/main.yml/badge.svg)](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/workflows/main.yml)
 
 Sistema pequeno em **Python + SQL (SQLite)** para registrar partidas de CS2, guardar dados brutos de desempenho e calcular métricas depois. Projeto de estudo com foco em **qualidade de dados** e **fundamentos de QA**.
 
