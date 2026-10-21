@@ -9,12 +9,14 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 - 36 testes automatizados passando com Pytest.
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
-- Funcionalidades de registro e consulta de partidas ainda não implementadas.
+- Registro de partidas implementado em `src/partidas.py`.
+- Registro de performances implementado em `src/performances.py`.
+- Consultas ainda não implementadas.
 - Cálculo de métricas e interface gráfica pendentes.
 
 ## ➡️ PRÓXIMO PASSO
-Implementar as primeiras funções Python para registrar partidas
-e performances no banco de dados SQLite.
+Revisar o registro de performances e consolidar o entendimento antes de
+escolher a próxima funcionalidade.
 
 Objetivos:
 - Utilizar a conexão existente em src/db.py.
@@ -65,6 +67,35 @@ compreendendo o código antes de avançar.
 ## 💡 Ideias futuras (só anotar, NÃO fazer agora)
 - Tabela ROUND
 - Parsing de demos .dem
+
+## Registro de partidas — 2026-10-21
+
+- `registrar_partida` recebe uma conexão existente e os cinco campos da partida.
+- SQL parametrizado; validação delegada ao schema; exceções SQLite propagadas.
+- Retorna `lastrowid`; commit, rollback e fechamento ficam com o chamador.
+- 27 novos casos de teste, incluindo persistência em arquivo, rollback e texto SQL literal.
+- Validação local: `python -B -m pytest -q -p no:cacheprovider`: 63 testes passando,
+  incluindo os 36 originais, preservados sem alterações.
+- Schema preservado; performances aguardam autorização.
+
+Observações fora do escopo, sem correções nesta etapa:
+- O CHECK da data verifica o formato, mas não a validade no calendário.
+- Há arquivos `__pycache__` versionados, que podem mudar ao executar Python.
+
+## Registro de performances — 2026-10-21
+
+- Implementado após autorização da etapa seguinte pelo usuário.
+- `registrar_performance` recebe conexão, IDs existentes e os 12 campos brutos.
+- Parâmetros após a conexão são passados por nome para evitar troca de estatísticas.
+- SQL parametrizado; validação pelo schema; erros SQLite propagados.
+- Retorna `lastrowid`; transação e fechamento controlados pelo chamador.
+- 45 novos casos de teste: associação, dados persistidos, limites, negativos,
+  campos obrigatórios, duplicatas, IDs inexistentes, rounds, rollback e reabertura.
+- Validação: `python -B -m pytest -q -p no:cacheprovider`: 108 testes passando
+  (36 originais + 27 de partidas + 45 de performances).
+- Schema e testes anteriores preservados; nenhuma métrica ou nova tabela criada.
+- Preferência de entrega: incluir arquivo `.txt` com código e alterações destacadas
+  ao concluir cada operação.
 
 ## 📚 Aprendizados recentes
 - Criação e organização de repositórios no GitHub.
