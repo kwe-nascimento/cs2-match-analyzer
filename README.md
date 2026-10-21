@@ -10,6 +10,18 @@ O registro de partidas e performances está implementado. Consultas analíticas,
 métricas e interface gráfica são etapas futuras. O banco armazena somente dados
 brutos nas tabelas `player`, `partida` e `performance`.
 
+Quality Assurance
+
+O projeto inclui testes automatizados com Pytest e testes manuais de integração, com foco na validação de transações e integridade dos dados.
+
+Casos de teste executados:
+
+QA-INT-001: validação de rollback após uma tentativa de registro de performance inválida — PASSOU.
+
+QA-INT-002: registro de partida e performance válidas, com verificação dos relacionamentos utilizando SQL JOIN — PASSOU.
+
+Os procedimentos, resultados esperados e resultados obtidos estão disponíveis na documentação de testes (QA.md).
+
 ## Instalação e testes
 
 Na pasta do repositório, com Python 3.12:
