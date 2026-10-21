@@ -5,7 +5,7 @@ import sqlite3
 import pytest
 
 from src.db import connect, init_db
-from src.partidas import registrar_partida
+from src.registros import registrar_partida
 
 
 @pytest.fixture

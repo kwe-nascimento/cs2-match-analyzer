@@ -6,11 +6,11 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 ## 📍 Onde estou
 - Modelagem inicial do banco de dados SQLite concluída.
 - Schema SQL implementado com regras de integridade.
-- 36 testes automatizados passando com Pytest.
+- 108 testes automatizados passando com Pytest (36 do schema e 72 de registros).
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
-- Registro de partidas implementado em `src/partidas.py`.
-- Registro de performances implementado em `src/performances.py`.
+- Registro de partidas implementado em `src/registros.py`.
+- Registro de performances implementado em `src/registros.py`.
 - Consultas ainda não implementadas.
 - Cálculo de métricas e interface gráfica pendentes.
 
@@ -107,3 +107,12 @@ Observações fora do escopo, sem correções nesta etapa:
 ## ❓ Dúvidas abertas
 - Como estruturar as funções de inserção e consulta de dados?
 - Como organizar os testes das novas funcionalidades?
+
+## Organização dos módulos — 2026-10-21
+
+- As duas funções de registro foram reunidas em `src/registros.py`.
+- `src/db.py` continua responsável pela conexão e inicialização do banco.
+- Os testes permanecem separados por funcionalidade; apenas seus imports mudaram.
+- Assinaturas, SQL, validações e controle das transações foram preservados.
+- README simplificado para objetivo, uso, testes e estrutura.
+- Relatórios anteriores preservados como histórico da organização daquela etapa.
