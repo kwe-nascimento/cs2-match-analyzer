@@ -37,6 +37,8 @@ Verificar se uma falha ao registrar uma performance provoca o rollback da partid
 
 ### Evidência
 Saída do console Python verificada durante a execução manual. Captura de tela a anexar, caso disponível.
+![Evidência de execução — QA-INT-001](docs/evidencias/QA-INT-001.png)
+
 
 ## QA-INT-002 — Registro de transação válida
 
@@ -46,38 +48,57 @@ Saída do console Python verificada durante a execução manual. Captura de tela
 **Status:** PASSOU
 
 ### Objetivo
-Verificar se uma partida e sua performance válida são registradas corretamente na mesma transação, mantendo o relacionamento com o jogador.
+Verificar se uma partida e sua performance válida são registradas corretamente na mesma transação, garantindo a integridade dos dados e o relacionamento entre jogador, partida e performance.
 
 ### Pré-condições
-- Banco SQLite em memória inicializado.
-- Jogador `jogador_teste`, ID 1, previamente cadastrado.
-- Funções de registro disponíveis.
+- Banco SQLite de teste inicializado em memória.
+- Jogador `jogador_teste` previamente cadastrado e confirmado com `commit()`.
+- Funções `registrar_partida()` e `registrar_performance()` disponíveis.
+- Conexão com o banco configurada com suporte a chaves estrangeiras.
 
 ### Procedimento
-1. Registrar partida na Inferno, com vitória por 13×9.
-2. Registrar performance de 20 kills, 15 deaths, 5 assists e 10 headshots.
-3. Finalizar a transação com `with conn`.
-4. Consultar as quantidades de registros.
-5. Executar um `JOIN` para validar o relacionamento.
-6. Verificar `conn.in_transaction`.
+1. Inicializar o banco SQLite de teste em memória.
+2. Cadastrar o jogador `jogador_teste` e confirmar seu registro.
+3. Iniciar uma transação utilizando `with conn`.
+4. Registrar uma partida válida no mapa Inferno (`de_inferno`), com vitória por 13×9.
+5. Registrar uma performance associada ao jogador e à partida, contendo:
+   - 20 kills.
+   - 15 deaths.
+   - 5 assists.
+   - 10 headshots.
+   - 22 rounds jogados.
+6. Finalizar a transação sem provocar exceções.
+7. Consultar a quantidade de registros existentes nas tabelas `player`, `partida` e `performance`.
+8. Executar uma consulta SQL utilizando `JOIN` para verificar o relacionamento entre os registros.
+9. Consultar `conn.in_transaction` para verificar se existe uma transação pendente.
+10. Comparar os resultados obtidos com os resultados esperados.
 
 ### Resultado esperado
-- Um jogador, uma partida e uma performance.
-- Performance associada ao jogador e mapa corretos.
-- Transação encerrada sem erros.
+- A partida e a performance devem ser registradas sem erros.
+- As funções devem retornar identificadores válidos.
+- O banco deve conter um jogador, uma partida e uma performance.
+- A performance deve estar corretamente associada ao jogador e à partida.
+- A consulta SQL com `JOIN` deve retornar o jogador, o mapa e suas estatísticas corretamente.
+- A transação deve ser finalizada sem operações pendentes.
 
 ### Resultado obtido
-- Jogadores: 1.
-- Partidas: 1.
-- Performances: 1.
-- Partida ID: 1.
-- Performance ID: 1.
-- JOIN: `('jogador_teste', 'de_inferno', 20, 15, 10)`.
-- `conn.in_transaction`: `False`.
+- Partida ID: `1`.
+- Performance ID: `1`.
+- Jogadores encontrados: `1`.
+- Partidas encontradas: `1`.
+- Performances encontradas: `1`.
+- Resultado do JOIN: `('jogador_teste', 'de_inferno', 20, 15, 10)`.
+- Transação aberta: `False`.
+- Resultado apresentado no terminal: `RESULTADO: PASSOU`.
 
 ### Conclusão
-**PASSOU.** As duas inserções foram executadas com sucesso e o relacionamento entre as tabelas foi confirmado.
+**PASSOU.** O registro da partida e da performance foi realizado com sucesso. As consultas confirmaram a presença dos registros e o relacionamento correto entre as tabelas.
 
-**Evidência:** saída do console Python apresentada durante a execução manual.
+A execução demonstrou o funcionamento esperado da transação válida, sem erros de integridade ou registros inconsistentes no cenário testado.
 
-**Limitação:** não foi testada a persistência após fechamento e reabertura de um banco em arquivo.
+**Limitação:** como o teste utilizou um banco SQLite em memória, não foi verificada a persistência dos dados após fechar e reabrir uma conexão com um banco em arquivo.
+
+### Evidência
+Reexecução manual realizada em 21/10/2026, às 16:34:38, com validação dos resultados pelo terminal Python.
+
+![Evidência de execução — QA-INT-002](docs/evidencias/QA-INT-002.png)
