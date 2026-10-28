@@ -199,7 +199,7 @@ Execução em **28/10/2026, às 16:10:17**, por meio do script `qa_evidencia_003
 - Os casos cobrem os comportamentos específicos descritos, sem representar cobertura completa das funcionalidades.
 - As capturas de QA-INT-001 e QA-INT-002 documentam reexecuções dos cenários originalmente realizados no console interativo.
 - Os scripts de evidência foram executados localmente e, até esta revisão, não fazem parte do repositório publicado.
-- A suíte automatizada do projeto é **separada** destes três cenários documentados: **116 testes aprovados localmente** após a implementação da consulta, enquanto a última execução publicada no GitHub Actions ainda corresponde à versão anterior com **108 testes aprovados**.
+- A suíte automatizada do projeto é **separada** destes três cenários documentados: **116 testes aprovados localmente** após a implementação da consulta, enquanto a última execução publicada no GitHub Actions ainda corresponde à versão anterior com **116 testes aprovados**.
 
 ## Resultado geral
 
