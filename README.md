@@ -10,6 +10,10 @@ O registro de partidas e performances está implementado. Consultas analíticas,
 métricas e interface gráfica são etapas futuras. O banco armazena somente dados
 brutos nas tabelas `player`, `partida` e `performance`.
 
+O projeto permite registrar partidas, armazenar performances e
+consultar o histórico de partidas de um jogador, com ordenação
+cronológica e validação dos relacionamentos no banco de dados.
+
 ## Quality Assurance
 
 O projeto inclui testes automatizados com Pytest e testes manuais de integração, com foco na validação de transações e integridade dos dados.
@@ -81,6 +85,8 @@ src/registros.py             # Registro de partidas e performances
 tests/test_schema.py         # Regras do banco
 tests/test_partidas.py       # Registro de partidas
 tests/test_performances.py   # Registro de performances
+src/consultas.py             # Consulta do histórico de partidas
+tests/test_consultas.py      # Testes da consulta do histórico
 ```
 
 Decisões e planejamento estão em [NOTAS.md](NOTAS.md).
