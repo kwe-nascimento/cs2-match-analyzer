@@ -10,20 +10,31 @@ O registro de partidas e performances está implementado. Consultas analíticas,
 métricas e interface gráfica são etapas futuras. O banco armazena somente dados
 brutos nas tabelas `player`, `partida` e `performance`.
 
-O projeto permite registrar partidas, armazenar performances e
-consultar o histórico de partidas de um jogador, com ordenação
-cronológica e validação dos relacionamentos no banco de dados.
+
+O projeto permite registrar partidas, armazenar performances individuais
+e consultar o histórico de partidas de um jogador, com ordenação
+cronológica e validação de integridade no banco de dados.
+
+O cálculo de métricas de desempenho (K/D, KDA, HS%, ADR e KAST%),
+as análises por mapa e uma interface gráfica são funcionalidades planejadas.
 
 ## Quality Assurance
 
-O projeto inclui testes automatizados com Pytest e testes manuais de integração, com foco na validação de transações e integridade dos dados.
+O projeto possui **116 testes automatizados com Pytest**, aprovados
+localmente e pelo **GitHub Actions**, além de **3 cenários de integração
+documentados com evidências**.
 
-**Casos de teste executados:**
+| ID | Cenário de integração | Resultado |
+|---|---|---|
+| **QA-INT-001** | Rejeição de performance inválida e rollback | **PASSOU** |
+| **QA-INT-002** | Registro válido e verificação com SQL JOIN | **PASSOU** |
+| **QA-INT-003** | Consulta de histórico, ordenação e isolamento entre jogadores | **PASSOU** |
 
-- **QA-INT-001:** rollback de performance inválida — PASSOU.
-- **QA-INT-002:** registro válido e verificação com SQL JOIN — PASSOU.
+Os cenários verificam integridade de dados, transações e consultas SQL.
+Foram executados por scripts Python iniciados manualmente, com
+verificações por `assert`.
 
-[Consultar casos de teste e resultados](QA.md)
+**[Consultar documentação completa, resultados e evidências](QA.md)**
 
 ## Instalação e testes
 
@@ -34,8 +45,9 @@ python -m pip install -r requirements.txt
 python -m pytest -v
 ```
 
-Os testes verificam as regras do schema e os registros: valores válidos e
-inválidos, relacionamentos, duplicatas, persistência e rollback.
+Os 116 testes verificam regras do schema, registros válidos e inválidos,
+relacionamentos, duplicatas, persistência, rollback e consultas do
+histórico de partidas.
 
 ## Utilização
 
