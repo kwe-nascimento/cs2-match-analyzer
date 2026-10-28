@@ -6,23 +6,25 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 ## 📍 Onde estou
 - Modelagem inicial do banco de dados SQLite concluída.
 - Schema SQL implementado com regras de integridade.
-- 108 testes automatizados passando com Pytest (36 do schema e 72 de registros).
+- 138 testes automatizados aprovados localmente com Pytest: 116 anteriores preservados e 22 novos testes de métricas.
+- Validação desta atualização no GitHub Actions ainda não realizada.
+- Quatro cenários de integração documentados; QA-INT-004 aprovado em 28/10/2026 às 18:39:17.
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
 - Registro de partidas implementado em `src/registros.py`.
 - Registro de performances implementado em `src/registros.py`.
-- Consultas ainda não implementadas.
-- Cálculo de métricas e interface gráfica pendentes.
+- Consulta do histórico implementada em `src/consultas.py`.
+- Métricas individuais e acumuladas implementadas em `src/metricas.py`.
+- Análises por mapa e interface gráfica pendentes.
 
 ## ➡️ PRÓXIMO PASSO
-Revisar o registro de performances e consolidar o entendimento antes de
-escolher a próxima funcionalidade.
+Desenvolver análises de desempenho por mapa como próxima funcionalidade,
+incluindo Best/Worst Map.
 
 Objetivos:
-- Utilizar a conexão existente em src/db.py.
-- Criar funções para inserir partidas.
-- Criar funções para inserir performances.
-- Respeitar as regras de integridade já implementadas.
+- Utilizar as tabelas e funções existentes.
+- Manter os cálculos de métricas consistentes com as fórmulas implementadas.
+- Criar testes para as análises por mapa e preservar os testes existentes.
 
 Sempre desenvolvendo uma funcionalidade por vez,
 compreendendo o código antes de avançar.
@@ -45,10 +47,10 @@ compreendendo o código antes de avançar.
 - sem valores negativos; data em AAAA-MM-DD
 
 ## 🗺️ Próximas etapas (em ordem)
-1. Implementar funções para registrar e consultar partidas e performances (Python).
-2. Criar testes automatizados para as funcionalidades de registro e consulta (Pytest).
-3. Implementar consultas SQL para calcular K/D, KDA, HS%, ADR, KAST% e Win Rate.
-4. Desenvolver análises de desempenho por mapa, incluindo Best/Worst Map.
+1. **Concluído:** implementar funções para registrar partidas e performances e consultar o histórico (Python).
+2. **Concluído:** criar testes automatizados para registro e consulta (Pytest).
+3. **Concluído:** implementar métricas K/D, KDA, HS%, ADR, KAST% e Win Rate, com testes.
+4. **Próxima funcionalidade:** desenvolver análises de desempenho por mapa, incluindo Best/Worst Map.
 5. Criar um plano de testes documentando cenários positivos, negativos e valores-limite.
 6. Elaborar um modelo de Bug Report para documentar defeitos encontrados.
 7. Implementar uma interface gráfica simples com Streamlit para registrar partidas e visualizar estatísticas.
@@ -116,3 +118,30 @@ Observações fora do escopo, sem correções nesta etapa:
 - Assinaturas, SQL, validações e controle das transações foram preservados.
 - README simplificado para objetivo, uso, testes e estrutura.
 - Relatórios anteriores preservados como histórico da organização daquela etapa.
+
+## Métricas de desempenho — 2026-10-28
+
+- `obter_metricas_partida(conn, player_id, partida_id)` retorna `kd`, `kda`,
+  `hs_percent`, `adr` e `kast_percent`, ou `None` sem performance associada.
+- `obter_resumo_jogador(conn, player_id)` retorna contagens de partidas,
+  vitórias, derrotas e empates, as cinco métricas e `win_rate`; retorna `None`
+  quando não há partidas associadas ao jogador.
+- Fórmulas:
+  - K/D = `kills / max(1, deaths)`.
+  - KDA = `(kills + assists) / max(1, deaths)`.
+  - HS% = `headshots / kills * 100`; quando kills é zero, retorna `0.0`.
+  - ADR = `damage / rounds_played`.
+  - KAST% = `kast_rounds / rounds_played * 100`.
+  - Win Rate = `vitorias / partidas * 100`, incluindo derrotas e empates no denominador.
+- No resumo, as razões usam os totais acumulados, nunca a média simples das
+  razões individuais; a convenção de zero mortes é aplicada ao total de deaths.
+- Os resultados não são arredondados; a apresentação fica a cargo da interface.
+- SQL parametrizado e consultas sem alteração de registros; transações e
+  fechamento da conexão continuam sob responsabilidade do chamador.
+- 22 novos testes de integração de métricas em SQLite em memória, com
+  `pytest.approx` para comparações decimais. Os 116 testes anteriores foram preservados.
+- Validação local: `python -B -m pytest -q -p no:cacheprovider`: **138 testes aprovados**.
+- QA-INT-004 aprovado em **28/10/2026 às 18:39:17**; evidência em
+  [QA-INT-004](docs/evidencias/QA-INT-004.png) e cenário documentado em [QA.md](QA.md).
+- A validação desta atualização no GitHub Actions ainda não foi realizada.
+- Próxima funcionalidade: análises de desempenho por mapa, incluindo Best/Worst Map.

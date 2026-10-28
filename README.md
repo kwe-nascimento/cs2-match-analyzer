@@ -6,31 +6,36 @@ Projeto de estudo em **Python e SQLite**, com **Pytest** e GitHub Actions, para
 registrar partidas de CS2 e o desempenho dos jogadores. O foco é praticar SQL,
 qualidade de dados e testes automatizados.
 
-O registro de partidas e performances está implementado. Consultas analíticas,
-métricas e interface gráfica são etapas futuras. O banco armazena somente dados
-brutos nas tabelas `player`, `partida` e `performance`.
+O registro de partidas e performances, a consulta do histórico e as métricas de
+desempenho estão implementados. Análises por mapa e interface gráfica são etapas
+futuras. O banco armazena somente dados brutos nas tabelas `player`, `partida` e
+`performance`; as métricas são calculadas nas consultas.
 
 
 O projeto permite registrar partidas, armazenar performances individuais
 e consultar o histórico de partidas de um jogador, com ordenação
 cronológica e validação de integridade no banco de dados.
 
-O cálculo de métricas de desempenho (K/D, KDA, HS%, ADR e KAST%),
-as análises por mapa e uma interface gráfica são funcionalidades planejadas.
+As métricas K/D, KDA, HS%, ADR e KAST% estão implementadas por partida e no
+resumo acumulado do jogador, que também inclui Win Rate. As análises por
+mapa e uma interface gráfica permanecem como funcionalidades futuras.
 
 ## Quality Assurance
 
-O projeto possui **116 testes automatizados com Pytest**, aprovados
-localmente e pelo **GitHub Actions**, além de **3 cenários de integração
-documentados com evidências**.
+O projeto possui **138 testes automatizados com Pytest aprovados localmente**
+(116 anteriores preservados e 22 novos testes de métricas), além de **4 cenários
+de integração documentados com evidências**. A validação desta atualização no
+**GitHub Actions ainda não foi realizada**.
 
 | ID | Cenário de integração | Resultado |
 |---|---|---|
 | **QA-INT-001** | Rejeição de performance inválida e rollback | **PASSOU** |
 | **QA-INT-002** | Registro válido e verificação com SQL JOIN | **PASSOU** |
 | **QA-INT-003** | Consulta de histórico, ordenação e isolamento entre jogadores | **PASSOU** |
+| **QA-INT-004** | Validação das métricas de desempenho | **PASSOU** |
 
-Os cenários verificam integridade de dados, transações e consultas SQL.
+Os cenários verificam integridade de dados, transações, consultas SQL e métricas
+de desempenho.
 Foram executados por scripts Python iniciados manualmente, com
 verificações por `assert`.
 
@@ -45,9 +50,9 @@ python -m pip install -r requirements.txt
 python -m pytest -v
 ```
 
-Os 116 testes verificam regras do schema, registros válidos e inválidos,
-relacionamentos, duplicatas, persistência, rollback e consultas do
-histórico de partidas.
+Os 138 testes verificam regras do schema, registros válidos e inválidos,
+relacionamentos, duplicatas, persistência, rollback, consultas do histórico
+de partidas e cálculos individuais e acumulados de métricas.
 
 ## Utilização
 
@@ -99,6 +104,8 @@ tests/test_partidas.py       # Registro de partidas
 tests/test_performances.py   # Registro de performances
 src/consultas.py             # Consulta do histórico de partidas
 tests/test_consultas.py      # Testes da consulta do histórico
+src/metricas.py              # Métricas por partida e resumo do jogador
+tests/test_metricas.py       # Testes das métricas de desempenho
 ```
 
 Decisões e planejamento estão em [NOTAS.md](NOTAS.md).

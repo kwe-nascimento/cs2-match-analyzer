@@ -9,6 +9,7 @@ Documentação dos cenários de integração do **CS2 Match Analyzer**, projeto 
 | **QA-INT-001** | Integridade da transação (rollback) | Negativo | 21/10/2026 | **PASSOU** |
 | **QA-INT-002** | Registro de transação válida | Positivo | 21/10/2026 | **PASSOU** |
 | **QA-INT-003** | Consulta do histórico por jogador | Positivo / isolamento de dados | 28/10/2026 | **PASSOU** |
+| **QA-INT-004** | Validação das métricas de desempenho | Cálculos individuais e acumulados | 28/10/2026 | **PASSOU** |
 
 **Ambiente:** Python 3.12 e SQLite em memória.
 
@@ -193,16 +194,74 @@ Execução em **28/10/2026, às 16:10:17**, por meio do script `qa_evidencia_003
 
 ---
 
+## QA-INT-004 — Validação das métricas de desempenho
+
+| Campo | Detalhe |
+| --- | --- |
+| Tipo | Teste de integração |
+| Prioridade | Alta |
+| Data da aprovação | 28/10/2026, às 18:39:17 |
+| Status | **PASSOU** |
+
+### Objetivo
+
+Validar o cálculo individual e acumulado de K/D, KDA, HS%, ADR, KAST% e Win Rate.
+
+### Pré-condições
+
+- Banco SQLite de teste inicializado em memória.
+- Funções `obter_metricas_partida()` e `obter_resumo_jogador()` disponíveis.
+- Três partidas associadas ao jogador: uma vitória, uma derrota e um empate.
+
+### Procedimento
+
+1. Consultar as métricas individuais e o resumo acumulado do jogador.
+2. Conferir os valores calculados usando `assert`.
+3. Verificar a proteção contra divisão por zero em K/D e KDA na partida sem mortes, usando o denominador `max(1, deaths)`.
+4. Verificar que as razões agregadas utilizam os totais, em vez da média das métricas individuais.
+5. Verificar o retorno `None` para associações inexistentes.
+
+### Resultado esperado
+
+- Resumo com **3 partidas, 1 vitória, 1 derrota e 1 empate**.
+- Métricas individuais e acumuladas coerentes com os dados registrados.
+- Derrotas e empates incluídos no denominador do Win Rate.
+- K/D e KDA protegidos na situação de zero mortes.
+- Retorno `None` quando não existe performance associada aos IDs informados.
+
+### Resultado obtido
+
+| Métrica do resumo | Resultado |
+| --- | --- |
+| K/D | `3.0` |
+| KDA | `3.6` |
+| HS% | `55.5555...` |
+| ADR | `54.4035...` |
+| KAST% | `36.8421...` |
+| Win Rate | `33.3333...` |
+
+Os valores foram validados por `assert` com `math.isclose`, incluindo proteção contra divisão por zero mortes, cálculos agregados pelos totais e retorno `None` para associações inexistentes. As reticências representam a exibição abreviada dos decimais; as funções não arredondam os resultados. A proteção de HS% para zero kills (`0.0`) é coberta pela suíte automatizada, separadamente deste cenário de três partidas.
+
+### Conclusão
+
+**PASSOU.** O cenário validou as métricas individuais e acumuladas, as convenções para divisão por zero e os retornos para associações inexistentes. Aprovação em **28/10/2026, às 18:39:17**.
+
+### Evidência de execução
+
+![QA-INT-004 — Validação das métricas de desempenho](docs/evidencias/QA-INT-004.png)
+
+---
+
 ## Limitações e observações
 
-- Os três cenários foram executados em **SQLite em memória**; eles não validam a persistência após fechar e reabrir um banco em arquivo.
+- Os quatro cenários foram executados em **SQLite em memória**; eles não validam a persistência após fechar e reabrir um banco em arquivo.
 - Os casos cobrem os comportamentos específicos descritos, sem representar cobertura completa das funcionalidades.
 - As capturas de QA-INT-001 e QA-INT-002 documentam reexecuções dos cenários originalmente realizados no console interativo.
 - Os scripts de evidência foram executados localmente e, até esta revisão, não fazem parte do repositório publicado.
-- A suíte automatizada do projeto é **separada** destes três cenários documentados: **116 testes aprovados localmente** após a implementação da consulta, enquanto a última execução publicada no GitHub Actions ainda corresponde à versão anterior com **116 testes aprovados**.
+- A suíte automatizada do projeto é **separada** destes quatro cenários documentados: **138 testes aprovados localmente**, sendo **116 anteriores preservados e 22 novos testes de métricas**. A validação desta atualização no **GitHub Actions ainda não foi realizada**.
 
 ## Resultado geral
 
-**3 cenários de integração executados — 3 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
+**4 cenários de integração executados — 4 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
 
 A documentação reúne procedimentos, resultados esperados, resultados obtidos e evidências visuais para apoiar a revisão técnica e a evolução do portfólio de QA.
