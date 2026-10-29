@@ -10,6 +10,7 @@ Documentação dos cenários de integração do **CS2 Match Analyzer**, projeto 
 | **QA-INT-002** | Registro de transação válida | Positivo | 21/10/2026 | **PASSOU** |
 | **QA-INT-003** | Consulta do histórico por jogador | Positivo / isolamento de dados | 28/10/2026 | **PASSOU** |
 | **QA-INT-004** | Validação das métricas de desempenho | Cálculos individuais e acumulados | 28/10/2026 | **PASSOU** |
+| **QA-INT-005** | Análise de desempenho por mapa | Agregação, classificação e isolamento | 29/10/2026 | **PASSOU** |
 
 **Ambiente:** Python 3.12 e SQLite em memória.
 
@@ -252,16 +253,116 @@ Os valores foram validados por `assert` com `math.isclose`, incluindo proteção
 
 ---
 
+## QA-INT-005 — Análise de desempenho por mapa
+
+| Campo | Detalhe |
+| --- | --- |
+| Tipo | Teste de integração — agregação, classificação e isolamento |
+| Prioridade | Alta |
+| Data da execução | 29/10/2026, às 14:47:48 (UTC−03:00) |
+| Status | **PASSOU** |
+
+### Objetivo
+
+Validar as estatísticas agregadas por mapa, a classificação Best/Worst Map,
+o isolamento entre jogadores e a integridade dos registros após as consultas.
+
+### Pré-condições
+
+- Python 3.12, banco SQLite em memória criado com `connect()` e `init_db()`.
+- Funções reais `registrar_partida()`, `registrar_performance()`,
+  `obter_estatisticas_mapas()`, `obter_melhor_mapa()` e `obter_pior_mapa()` disponíveis.
+- Script independente `qa_evidencia_005.py`, executado com asserts habilitados.
+- Dois jogadores cadastrados, seis partidas do principal em cinco mapas e uma
+  performance do segundo jogador na vitória compartilhada em Mirage.
+
+### Dados de teste
+
+| Mapa | Resultado | Placar | Kills | Deaths | Assists | HS | Damage | KAST rounds |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| de_ancient | Vitória | 13 × 7 | 15 | 5 | 3 | 5 | 2200 | 12 |
+| de_inferno | Vitória | 13 × 7 | 30 | 10 | 4 | 15 | 2200 | 16 |
+| de_mirage | Vitória | 13 × 7 | 20 | 10 | 5 | 10 | 2000 | 15 |
+| de_mirage | Derrota | 7 × 13 | 5 | 10 | 1 | 1 | 1000 | 8 |
+| de_nuke | Derrota | 7 × 13 | 10 | 20 | 3 | 5 | 1000 | 10 |
+| de_anubis | Empate | 10 × 10 | 10 | 10 | 2 | 2 | 900 | 9 |
+
+O segundo jogador possui 40 kills, 2 deaths, 8 assists, 30 HS, 4000 damage,
+20 rounds e 20 KAST rounds na vitória em Mirage. Os demais campos são válidos
+no schema. Totais do banco: dois jogadores, seis partidas e sete performances.
+
+### Procedimento
+
+1. Executar `python -B .\qa_evidencia_005.py` no PowerShell, na raiz do projeto.
+2. Inicializar o banco em memória, inserir os dados com as funções reais e confirmar a transação.
+3. Guardar o estado dos registros, o contador de alterações e o estado transacional.
+4. Consultar a classificação, Best Map e Worst Map do jogador principal.
+5. Conferir cinco mapas, seis partidas e a ordem exata com `assert`.
+6. Conferir contagens e métricas agregadas de Mirage, usando `math.isclose()` nos decimais.
+7. Consultar o segundo jogador e conferir seu resumo independente e seus Best/Worst Maps.
+8. Verificar `[]`/`None` para jogador inexistente e comparar os registros e o estado transacional após as consultas.
+9. Exibir a classificação e `RESULTADO: PASSOU` somente após todos os asserts.
+
+### Resultado esperado
+
+Classificação por Win Rate decrescente, ADR decrescente, K/D decrescente e nome
+crescente. Best Map deve ser `de_ancient`, pelo desempate alfabético com Inferno;
+Worst Map deve ser `de_anubis`, pelo menor ADR entre os mapas com Win Rate zero.
+
+| Posição | Mapa | Partidas | Win Rate | ADR | K/D |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 1 | de_ancient | 1 | 100% | 110 | 3 |
+| 2 | de_inferno | 1 | 100% | 110 | 3 |
+| 3 | de_mirage | 2 | 50% | 75 | 1,25 |
+| 4 | de_nuke | 1 | 0% | 50 | 0,5 |
+| 5 | de_anubis | 1 | 0% | 45 | 1 |
+
+Mirage deve apresentar duas partidas, uma vitória, uma derrota e nenhum empate;
+K/D 1,25, KDA 1,55, HS% 44%, ADR 75, KAST% 57,5% e Win Rate 50%, calculados
+pelos totais (25 kills, 20 deaths, 6 assists, 11 HS, 3000 damage, 40 rounds e
+23 KAST rounds). A performance do segundo jogador não pode contaminar esses valores.
+
+### Resultado obtido
+
+A classificação obtida correspondeu integralmente à tabela esperada acima.
+Todos os asserts foram concluídos com sucesso, incluindo os valores agregados de
+Mirage. A captura do terminal foi revisada e aprovada pelo QA Lead, conforme
+validação comunicada pelo usuário.
+
+| Verificação | Resultado |
+| --- | --- |
+| Mapas / partidas do principal | `5 / 6` |
+| Best Map | `de_ancient` |
+| Worst Map | `de_anubis` |
+| Segundo jogador | Somente Mirage, uma vitória; K/D 20, KDA 24, HS% 75%, ADR 200, KAST% 100%, Win Rate 100% |
+| Isolamento entre jogadores | `OK` |
+| Integridade dos registros | `OK`; registros, total_changes e estado transacional preservados |
+| Jogador inexistente | Lista vazia e Best/Worst `None` |
+| Resultado do script | `RESULTADO: PASSOU` |
+
+### Conclusão
+
+**PASSOU.** Execução manual pelo usuário em **29/10/2026, às 14:47:48
+(UTC−03:00)**. Cenário aprovado pelo QA Lead após revisão da captura do terminal.
+
+### Evidência de execução
+
+Arquivo `docs/evidencias/QA-INT-005.png` confirmado no workspace.
+
+![QA-INT-005 — Classificação por mapa, isolamento e integridade](docs/evidencias/QA-INT-005.png)
+
+---
+
 ## Limitações e observações
 
-- Os quatro cenários foram executados em **SQLite em memória**; eles não validam a persistência após fechar e reabrir um banco em arquivo.
+- Os cinco cenários foram executados em **SQLite em memória**; eles não validam a persistência após fechar e reabrir um banco em arquivo.
 - Os casos cobrem os comportamentos específicos descritos, sem representar cobertura completa das funcionalidades.
 - As capturas de QA-INT-001 e QA-INT-002 documentam reexecuções dos cenários originalmente realizados no console interativo.
 - Os scripts de evidência foram executados localmente e, até esta revisão, não fazem parte do repositório publicado.
-- A suíte automatizada do projeto é **separada** destes quatro cenários documentados: **167 testes aprovados localmente**, sendo **138 anteriores preservados e 29 novos testes de manutenção**. A validação dos 167 testes no GitHub Actions ocorrerá após a publicação. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
+- A suíte automatizada do projeto é **separada** destes cinco cenários manuais documentados: **195 testes aprovados localmente**, sendo **167 anteriores preservados e 28 novos testes de análise por mapa**. Os 195 testes ainda não foram validados no GitHub Actions. A manutenção da base `0c17c96` já foi aprovada remotamente com 167 testes e 100% de cobertura Python, conforme validação informada pelo usuário. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 ## Resultado geral
 
-**4 cenários de integração executados — 4 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
+**5 cenários de integração executados — 5 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
 
 A documentação reúne procedimentos, resultados esperados, resultados obtidos e evidências visuais para apoiar a revisão técnica e a evolução do portfólio de QA.

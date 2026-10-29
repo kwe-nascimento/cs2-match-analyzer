@@ -6,29 +6,23 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 ## 📍 Onde estou
 - Modelagem inicial do banco de dados SQLite concluída.
 - Schema SQL implementado com regras de integridade.
-- 167 testes automatizados aprovados localmente com Pytest: 138 anteriores preservados e 29 novos testes de manutenção.
-- A validação dos 167 testes no GitHub Actions ocorrerá após a publicação.
+- 195 testes automatizados aprovados localmente com Pytest: 167 anteriores preservados e 28 novos testes de análise por mapa.
+- Base `0c17c96`: 167 testes e 100% de cobertura Python aprovados no GitHub Actions, conforme validação informada pelo usuário. A suíte atual de 195 testes aguarda publicação e execução remota.
 - Commit `289c378`: 138 testes aprovados no GitHub Actions; [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
-- Quatro cenários de integração documentados; QA-INT-004 aprovado em 28/10/2026 às 18:39:17.
+- Cinco cenários de integração documentados e aprovados; QA-INT-005 executado em 29/10/2026 às 14:47:48 (UTC−03:00) e aprovado pelo QA Lead.
+- Cobertura Python local de 100%: 46 statements e 6 branches cobertos.
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
 - Registro de partidas implementado em `src/registros.py`.
 - Registro de performances implementado em `src/registros.py`.
 - Consulta do histórico implementada em `src/consultas.py`.
 - Métricas individuais e acumuladas implementadas em `src/metricas.py`.
-- Análises por mapa e interface gráfica pendentes.
+- Análises por mapa e Best/Worst Map implementados em `src/mapas.py`; interface gráfica pendente.
 
 ## ➡️ PRÓXIMO PASSO
-Desenvolver análises de desempenho por mapa como próxima funcionalidade,
-incluindo Best/Worst Map.
-
-Objetivos:
-- Utilizar as tabelas e funções existentes.
-- Manter os cálculos de métricas consistentes com as fórmulas implementadas.
-- Criar testes para as análises por mapa e preservar os testes existentes.
-
-Sempre desenvolvendo uma funcionalidade por vez,
-compreendendo o código antes de avançar.
+Aguardar autorização do QA Lead para publicação do módulo de análise por mapa,
+com QA-INT-005 aprovado. Validar os 195 testes no GitHub Actions após publicação.
+Streamlit segue futuro.
 
 ## ✅ Decisões tomadas (não rediscutir)
 - Banco guarda só dados brutos; métricas são calculadas depois
@@ -51,13 +45,13 @@ compreendendo o código antes de avançar.
 1. **Concluído:** implementar funções para registrar partidas e performances e consultar o histórico (Python).
 2. **Concluído:** criar testes automatizados para registro e consulta (Pytest).
 3. **Concluído:** implementar métricas K/D, KDA, HS%, ADR, KAST% e Win Rate, com testes.
-4. **Próxima funcionalidade:** desenvolver análises de desempenho por mapa, incluindo Best/Worst Map.
+4. **Implementado e validado no QA-INT-005:** análises de desempenho por mapa, incluindo Best/Worst Map; publicação aguarda autorização.
 5. Criar um plano de testes documentando cenários positivos, negativos e valores-limite.
 6. Elaborar um modelo de Bug Report para documentar defeitos encontrados.
 7. Implementar uma interface gráfica simples com Streamlit para registrar partidas e visualizar estatísticas.
 8. Desenvolver testes funcionais e de integração para validar os fluxos da aplicação.
 9. Implementar gráficos e indicadores visuais para acompanhar a evolução do desempenho.
-10. **Concluído nesta manutenção:** configurar cobertura com pytest-cov; execução remota pendente de publicação.
+10. **Concluído:** cobertura com pytest-cov; manutenção `0c17c96` aprovada remotamente com 167 testes e 100% de cobertura Python.
 11. Aprimorar a documentação do projeto com exemplos de utilização e resultados dos testes.
 
 ### ✅ Etapas concluídas
@@ -162,5 +156,33 @@ Observações fora do escopo, sem correções nesta etapa:
   mínimo obrigatório. HTML local em htmlcov/ ignorado pelo Git.
 - Regressões cobrem calendário, preservação após rejeição, placares com um e
   dois jogadores, inicialização repetida e atualização de banco existente.
-- A execução desta manutenção no GitHub Actions permanece pendente de
-  publicação e revisão do QA Lead. Best/Worst Map e Streamlit seguem futuros.
+- A manutenção do commit `0c17c96` foi aprovada no GitHub Actions com 167 testes
+  e 100% de cobertura Python. Naquela etapa, Best/Worst Map e Streamlit eram futuros.
+
+## Análise por mapa — 2026-10-29
+
+- `obter_estatisticas_mapas(conn, player_id)` retorna lista de resumos por mapa
+  em ordem de classificação; `obter_melhor_mapa` e `obter_pior_mapa` recebem os
+  mesmos argumentos e retornam o primeiro/último resumo ou None. Sem dados,
+  a lista é vazia; com um mapa, Best e Worst coincidem.
+- Resumos incluem mapa, partidas, vitórias, derrotas, empates e seis métricas.
+- Fórmulas sobre totais por mapa, preservando `src/metricas.py`:
+  K/D = kills / max(1, deaths); KDA = (kills + assists) / max(1, deaths);
+  HS% = headshots / kills * 100, ou 0.0 sem kills; ADR = damage / rounds_played;
+  KAST% = kast_rounds / rounds_played * 100; Win Rate = vitorias / partidas * 100.
+  Sem média simples, arredondamento ou armazenamento de métricas no banco.
+- Win Rate, ADR e K/D decrescentes; nome crescente como desempate final.
+  Worst é o último inclusive no empate total. Nomes não são normalizados;
+  agrupamento exato e ordem lexicográfica sensível a caixa.
+- Sem mínimo de partidas. A contagem acompanha cada resumo; amostras pequenas
+  podem ser pouco representativas.
+- JOIN entre performance e partida, filtro parametrizado por jogador; partidas
+  sem performance dele não entram. Consultas não controlam transações/conexão.
+- 28 novos testes; 195 aprovados localmente. Cobertura Python: 100% em todos os
+  módulos, 46 statements e 6 branches; 167 testes anteriores preservados.
+- QA-INT-005 executado pelo usuário em 29/10/2026 às 14:47:48 (UTC−03:00),
+  aprovado pelo QA Lead após revisão da captura; cinco cenários manuais
+  documentados e aprovados. Evidência: [QA-INT-005](docs/evidencias/QA-INT-005.png).
+- Resultado remoto da base 0c17c96 informado pelo usuário: 167 testes e 100%
+  de cobertura. Esta nova etapa ainda não foi executada no GitHub Actions.
+- Sem alterações de schema, fórmulas anteriores, dependências ou Streamlit.
