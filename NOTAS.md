@@ -6,23 +6,23 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 ## 📍 Onde estou
 - Modelagem inicial do banco de dados SQLite concluída.
 - Schema SQL implementado com regras de integridade.
-- 195 testes automatizados aprovados localmente com Pytest: 167 anteriores preservados e 28 novos testes de análise por mapa.
-- Base `0c17c96`: 167 testes e 100% de cobertura Python aprovados no GitHub Actions, conforme validação informada pelo usuário. A suíte atual de 195 testes aguarda publicação e execução remota.
+- 235 testes automatizados aprovados localmente: 195 anteriores preservados e 40 novos testes de serviços e interface Streamlit.
+- Base `0c17c96`: 167 testes e 100% de cobertura Python aprovados no GitHub Actions, conforme validação informada pelo usuário. A suíte atual de 235 testes aguarda publicação e execução remota.
 - Commit `289c378`: 138 testes aprovados no GitHub Actions; [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
-- Cinco cenários de integração documentados e aprovados; QA-INT-005 executado em 29/10/2026 às 14:47:48 (UTC−03:00) e aprovado pelo QA Lead.
-- Cobertura Python local de 100%: 46 statements e 6 branches cobertos.
+- Seis cenários manuais de integração documentados e aprovados; QA-INT-006 concluído pelo usuário em 29/10/2026, incluindo persistência após reinicializar o Streamlit. QA-INT-005 preservado com sua execução em 29/10/2026 às 14:47:48 (UTC−03:00).
+- Cobertura local: src com 100% (106 statements, 26 branches); app.py com 98% na medição separada da UI.
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
 - Registro de partidas implementado em `src/registros.py`.
 - Registro de performances implementado em `src/registros.py`.
 - Consulta do histórico implementada em `src/consultas.py`.
 - Métricas individuais e acumuladas implementadas em `src/metricas.py`.
-- Análises por mapa e Best/Worst Map implementados em `src/mapas.py`; interface gráfica pendente.
+- Análises por mapa e Best/Worst Map implementados; interface local Streamlit disponível em `app.py`.
 
 ## ➡️ PRÓXIMO PASSO
-Aguardar autorização do QA Lead para publicação do módulo de análise por mapa,
-com QA-INT-005 aprovado. Validar os 195 testes no GitHub Actions após publicação.
-Streamlit segue futuro.
+MVP visual 1 aprovado na revisão técnica e no QA-INT-006. Preparar a próxima
+revisão de staging; aguardar autorização antes de adicionar arquivos ao índice,
+criar commit ou publicar. Validação remota da suíte de 235 testes pendente.
 
 ## ✅ Decisões tomadas (não rediscutir)
 - Banco guarda só dados brutos; métricas são calculadas depois
@@ -48,7 +48,7 @@ Streamlit segue futuro.
 4. **Implementado e validado no QA-INT-005:** análises de desempenho por mapa, incluindo Best/Worst Map; publicação aguarda autorização.
 5. Criar um plano de testes documentando cenários positivos, negativos e valores-limite.
 6. Elaborar um modelo de Bug Report para documentar defeitos encontrados.
-7. Implementar uma interface gráfica simples com Streamlit para registrar partidas e visualizar estatísticas.
+7. **Implementado e validado no QA-INT-006:** MVP visual 1 com Streamlit para cadastro, registro e estatísticas; publicação pendente.
 8. Desenvolver testes funcionais e de integração para validar os fluxos da aplicação.
 9. Implementar gráficos e indicadores visuais para acompanhar a evolução do desempenho.
 10. **Concluído:** cobertura com pytest-cov; manutenção `0c17c96` aprovada remotamente com 167 testes e 100% de cobertura Python.
@@ -186,3 +186,61 @@ Observações fora do escopo, sem correções nesta etapa:
 - Resultado remoto da base 0c17c96 informado pelo usuário: 167 testes e 100%
   de cobertura. Esta nova etapa ainda não foi executada no GitHub Actions.
 - Sem alterações de schema, fórmulas anteriores, dependências ou Streamlit.
+
+## Interface Streamlit — MVP visual 1 — 2026-10-29
+
+- `app.py` usa componentes nativos em quatro abas, com cadastro/seleção lateral,
+  dashboard, registro, histórico e Best/Worst Map. Tema escuro em config.toml.
+- `src/app_servicos.py` separa conexão, cadastro, normalização de mapa, validação
+  amigável e gravação atômica da UI, permitindo testar rollback sem Streamlit.
+- Caminho estável ROOT/data/cs2.sqlite, sobrescrito por CS2_DB_PATH; pais criados
+  automaticamente. Conexão por execução com fechamento em finally, sem cache global.
+- Cadastro parametrizado, nickname obrigatório, Steam ID vazio vira NULL;
+  conflitos UNIQUE apresentados de forma amigável, sem traceback SQL na tela.
+- Partida e performance passam pelas funções existentes em uma transação;
+  resultado e rounds_played derivados do placar. SQLite mantém a proteção final.
+- Normalização: minúsculas, espaços para _, prefixo de_ em nomes simples;
+  mapas personalizados aceitos, sem migração dos nomes legados.
+- Formulários gravam só no submit. Após sucesso, ficam substituídos pela confirmação
+  até a ação Registrar outra partida; novo formulário tem chaves novas. Seleção e
+  mensagens são temporárias no session_state; dados persistentes ficam no SQLite.
+- Consultas sem cache usam módulos existentes; precisão e classificação preservadas.
+- 40 novos casos cobrem serviços e AppTest. Suíte completa: 235 aprovados;
+  src com 100%; UI app.py com 98% na medição separada (linhas 95–96 não cobertas,
+  tratamento defensivo de rejeição do banco após a validação do formulário).
+  Branch de importação do bloco __main__ também não percorrido na alternativa.
+- Instalação de requirements concluída com Streamlit 1.66.1. Nenhum framework
+  adicional foi adicionado diretamente; dependências transitivas vêm do Streamlit.
+- Servidor iniciado apenas em localhost no teste: HTTP 200 na raiz e no health;
+  processo encerrado. Fluxos funcionais passaram no AppTest e foram posteriormente
+  aprovados na validação manual QA-INT-006.
+- Problemas/limitações: não há deduplicação entre sessões ou formulários novos;
+  SQLite pode ter contenção de escrita; não há autenticação, edição, exclusão,
+  importação externa ou hospedagem. Nenhum erro bloqueante nos testes executados.
+- Revisão técnica e validação manual QA-INT-006 concluídas e aprovadas.
+  Próximo passo: revisão de staging e autorização antes da publicação.
+  Cinco cenários anteriores preservados; total atual de seis aprovados.
+
+## Conclusão do QA-INT-006 — 2026-10-29
+
+- Validação manual da interface aprovada pelo usuário e pelo QA Lead: cadastro e
+  seleção, nickname duplicado, registro, métricas individuais/acumuladas, mapas,
+  histórico, isolamento e persistência após reiniciar o Streamlit.
+- QA_TESTE_A: duas partidas (vitória e derrota), K/D 1,20, KDA 1,52, ADR 80,
+  HS% 40%, KAST% 62,50% e Win Rate 50%.
+- Sete capturas oficiais verificadas e referenciadas por etapa em QA.md.
+  A imagem TESTEPERSISTIDO é complementar ao relato manual de reinicialização;
+  não prova isoladamente a sequência. Isolamento sem captura independente.
+- 235 testes locais aprovados. Cobertura informada no relatório: src com 100%
+  (106 statements e 26 branches); app.py com 98% na medição separada da UI,
+  com linhas 95–96 e alternativa do bloco __main__ não cobertas.
+- A execução dos 235 testes no GitHub Actions permanece pendente de publicação.
+- Limitações preservadas: versão local sem autenticação, edição/exclusão ou
+  importação; proteção de duplicação temporária por sessão, sem deduplicação
+  global; possível contenção de escrita SQLite; amostras pequenas por mapa.
+
+### Backlog técnico — não bloqueia o MVP atual
+
+- Revisar o controle transacional de cadastrar_jogador() para evitar confirmar transações anteriores do chamador, com teste de regressão.
+
+Melhoria apenas registrada; nenhum ajuste de código ou teste realizado nesta etapa.

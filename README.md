@@ -7,8 +7,7 @@ registrar partidas de CS2 e o desempenho dos jogadores. O foco é praticar SQL,
 qualidade de dados e testes automatizados.
 
 O registro de partidas e performances, a consulta do histórico e as métricas de
-desempenho e as análises por mapa estão implementados. A interface gráfica é uma
-etapa futura. O banco armazena somente dados brutos nas tabelas `player`, `partida` e
+desempenho, as análises por mapa e a interface local Streamlit estão implementados. O banco armazena somente dados brutos nas tabelas `player`, `partida` e
 `performance`; as métricas são calculadas nas consultas.
 
 
@@ -18,12 +17,12 @@ cronológica e validação de integridade no banco de dados.
 
 As métricas K/D, KDA, HS%, ADR e KAST% estão implementadas por partida e no
 resumo acumulado do jogador, que também inclui Win Rate. As análises por
-mapa incluem Best/Worst Map; a interface gráfica permanece como funcionalidade futura.
+mapa incluem Best/Worst Map e podem ser consultadas na interface gráfica local.
 
 ## Quality Assurance
 
-O projeto possui **195 testes automatizados com Pytest aprovados localmente**
-(167 anteriores preservados e 28 novos testes de análise por mapa), além de **5 cenários
+O projeto possui **235 testes automatizados com Pytest aprovados localmente**
+(195 anteriores preservados e 40 novos testes de serviços e interface), além de **6 cenários
 manuais de integração documentados e aprovados, com evidências**. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 | ID | Cenário de integração | Resultado |
@@ -33,11 +32,13 @@ manuais de integração documentados e aprovados, com evidências**. O commit `2
 | **QA-INT-003** | Consulta de histórico, ordenação e isolamento entre jogadores | **PASSOU** |
 | **QA-INT-004** | Validação das métricas de desempenho | **PASSOU** |
 | **QA-INT-005** | Análise de desempenho por mapa e Best/Worst Map | **PASSOU** |
+| **QA-INT-006** | Validação funcional da interface Streamlit e persistência | **PASSOU** |
 
 Os cenários verificam integridade de dados, transações, consultas SQL e métricas
 de desempenho.
-Foram executados por scripts Python iniciados manualmente, com
-verificações por `assert`.
+QA-INT-001 a QA-INT-005 foram executados por scripts Python iniciados manualmente,
+com verificações por `assert`. QA-INT-006 foi executado no navegador pelo usuário,
+incluindo persistência após reinicializar o Streamlit.
 
 **[Consultar documentação completa, resultados e evidências](QA.md)**
 
@@ -50,11 +51,11 @@ python -m pip install -r requirements.txt
 python -m pytest -v
 ```
 
-Os 195 testes verificam regras do schema, registros válidos e inválidos,
+Os testes verificam regras do schema, registros válidos e inválidos,
 relacionamentos, duplicatas, persistência, rollback, consultas do histórico
 de partidas, cálculos individuais e acumulados de métricas, validade das datas
 e consistência dos placares após atualização, agregação por mapa e classificação
-Best/Worst Map.
+Best/Worst Map, além de cadastro, persistência e fluxos de interface com AppTest.
 
 ## Utilização
 
@@ -124,8 +125,8 @@ O relatório mostra linhas, branches e linhas não cobertas, sem percentual mín
 obrigatório. Para HTML, use `--cov-report=html`; a saída `htmlcov/` é ignorada
 pelo Git. O workflow exibirá cobertura nos logs após a publicação.
 A base `0c17c96` teve 167 testes e 100% de cobertura Python aprovados no GitHub
-Actions, conforme validação informada pelo usuário. Os 195 testes desta etapa
-ainda aguardam publicação e execução no GitHub Actions.
+Actions, conforme validação informada pelo usuário. A suíte atual de 235 testes
+ainda aguarda publicação e execução no GitHub Actions.
 
 ## Análise por mapa
 
@@ -160,6 +161,64 @@ podem produzir resultados pouco representativos.
 Somente performances do jogador entram no resumo, via JOIN parametrizado.
 As consultas não armazenam métricas nem executam commit, rollback ou close.
 QA-INT-005 foi executado pelo usuário em 29/10/2026, às 14:47:48 (UTC−03:00),
-e aprovado pelo QA Lead após revisão da captura. Os cinco cenários manuais
-estão documentados em QA.md. Os 195 testes automatizados ainda não foram
-validados no GitHub Actions.
+e aprovado pelo QA Lead após revisão da captura. Os seis cenários manuais
+estão documentados em QA.md. Os 235 testes desta etapa ainda não foram
+validados no GitHub Actions. QA-INT-006 foi aprovado, incluindo os fluxos da interface e a persistência confirmada manualmente.
+
+## Interface gráfica — MVP visual 1
+
+Com Python 3.12, abra o PowerShell na raiz do repositório:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+O Streamlit mostra o endereço local no terminal. Cadastre um jogador na barra
+lateral (Steam ID opcional) e selecione-o. Use as abas Visão geral, Registrar
+partida, Histórico e Estatísticas por mapa para acompanhar seus resultados.
+O tema nativo é escuro, com grafite e azul, configurado em `.streamlit/config.toml`.
+
+O formulário salva partida e performance juntas. Resultado e rounds jogados
+são definidos pelo placar; erros de integridade não deixam partida incompleta.
+O nome do mapa vira minúsculas, espaços viram `_` e nomes sem `_` recebem `de_`:
+Mirage, mirage e de_mirage ficam como de_mirage. Nomes personalizados com prefixo,
+como aim_custom e cs_office, são preservados após essa normalização. Registros
+antigos não são renomeados automaticamente.
+
+Após salvar, clique em **Registrar outra partida** para abrir um formulário novo.
+Reruns não repetem a gravação. Essa proteção é temporária por sessão; reenviar
+manualmente dados iguais em uma nova sessão ou outro formulário cria uma nova
+partida. Não há deduplicação global por conteúdo, pois partidas iguais podem
+ser legítimas.
+
+Os dados ficam em `data/cs2.sqlite`, relativo à raiz do projeto, independentemente
+do diretório do terminal. A pasta é criada automaticamente. Cada execução abre
+e fecha sua própria conexão; nenhuma conexão global é compartilhada entre sessões.
+Para um banco alternativo, antes de iniciar:
+
+```powershell
+$env:CS2_DB_PATH = 'C:\caminho\alternativo\cs2.sqlite'
+python -m streamlit run app.py
+```
+
+Caminhos relativos em `CS2_DB_PATH` também partem da raiz do projeto. Arquivos
+SQLite são ignorados pelo Git. Os testes novos usam `tmp_path` e `CS2_DB_PATH`
+para nunca acessar os dados reais.
+
+```powershell
+python -B -m pytest -q -p no:cacheprovider
+python -B -m pytest -q -p no:cacheprovider --cov=src --cov-branch --cov-report=term-missing
+# Medição separada da UI, pois app.py está fora de src:
+python -B -m pytest -q -p no:cacheprovider tests/test_app_servicos.py tests/test_app_streamlit.py --cov=src.app_servicos --cov=app --cov-branch --cov-report=term-missing
+```
+
+Resultados locais: 235 testes aprovados, 100% de cobertura em src e 98% em app.py
+na medição separada da interface. A validação funcional no navegador foi concluída
+e aprovada no QA-INT-006; a cobertura automatizada é uma verificação separada.
+
+Limitações: aplicativo local sem login; não há edição, exclusão, importação da
+Steam ou hospedagem pública. A seleção de jogador organiza os dados, sem oferecer
+controle de acesso. Gravações SQLite concorrentes podem exigir nova tentativa.
+Best/Worst Map continua sem mínimo de partidas: amostras pequenas podem ser pouco
+representativas. A publicação e a validação dos 235 testes no GitHub Actions permanecem pendentes.

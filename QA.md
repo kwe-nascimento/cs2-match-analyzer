@@ -11,10 +11,11 @@ Documentação dos cenários de integração do **CS2 Match Analyzer**, projeto 
 | **QA-INT-003** | Consulta do histórico por jogador | Positivo / isolamento de dados | 28/10/2026 | **PASSOU** |
 | **QA-INT-004** | Validação das métricas de desempenho | Cálculos individuais e acumulados | 28/10/2026 | **PASSOU** |
 | **QA-INT-005** | Análise de desempenho por mapa | Agregação, classificação e isolamento | 29/10/2026 | **PASSOU** |
+| **QA-INT-006** | Validação funcional da interface Streamlit | Fluxos de UI, isolamento e persistência | 29/10/2026 | **PASSOU** |
 
-**Ambiente:** Python 3.12 e SQLite em memória.
+**Ambiente:** Python 3.12; QA-INT-001 a QA-INT-005 em SQLite em memória; QA-INT-006 na interface local Streamlit com SQLite persistente.
 
-**Execução:** cenários realizados manualmente e reexecutados por scripts Python iniciados pelo terminal, com verificações por `assert`.
+**Execução:** QA-INT-001 a QA-INT-005 realizados por scripts Python iniciados manualmente no terminal, com verificações por `assert`; QA-INT-006 executado pelo usuário no navegador, incluindo reinicialização do Streamlit.
 
 **Escopo:** integração entre as funções Python e o banco SQLite; as capturas abaixo são evidências das execuções dos cenários.
 
@@ -353,16 +354,144 @@ Arquivo `docs/evidencias/QA-INT-005.png` confirmado no workspace.
 
 ---
 
+## QA-INT-006 — Validação funcional da interface Streamlit
+
+| Campo | Detalhe |
+| --- | --- |
+| Tipo | Teste de integração — fluxos funcionais da interface local |
+| Prioridade | Alta |
+| Data | 29/10/2026; horário exato não informado |
+| Ambiente | Windows, Python 3.12, Streamlit local no navegador e SQLite persistente |
+| Status | **PASSOU** |
+
+### Objetivo
+
+Validar cadastro e seleção de jogadores, rejeição de nickname duplicado,
+registro de partidas, métricas individuais e acumuladas, Best/Worst Map,
+histórico, isolamento entre jogadores e persistência após reiniciar o Streamlit.
+
+### Pré-condições
+
+- Dependências instaladas e aplicação iniciada com `python -m streamlit run app.py`.
+- Banco SQLite persistente configurado; caminho padrão `data/cs2.sqlite`, relativo
+  à raiz do projeto, ou caminho alternativo definido por `CS2_DB_PATH`.
+- Jogador de teste `QA_TESTE_A`, cadastrado pelo formulário da interface.
+- Duas partidas desse jogador: vitória em `de_mirage` por 13 × 7 e derrota em
+  `de_inferno` por 7 × 13, ambas em 29/10/2026.
+
+### Procedimento executado e evidências por etapa
+
+#### 1. Cadastro e seleção
+
+Cadastrar `QA_TESTE_A` pela barra lateral e conferir sua seleção e o estado
+inicial sem partidas. A captura mostra a confirmação de cadastro e o jogador
+selecionado.
+
+![QA-INT-006 — Cadastro confirmado e seleção de QA_TESTE_A](docs/evidencias/QA-INT-006-CADASTRO.png)
+
+#### 2. Rejeição de nickname duplicado
+
+Tentar cadastrar novamente `QA_TESTE_A` e conferir a mensagem amigável de conflito,
+sem traceback SQL exposto na interface.
+
+![QA-INT-006 — Rejeição de nickname duplicado](docs/evidencias/QA-INT-006-TESTENOMEDUPLICADO.png)
+
+#### 3. Registro e métricas da primeira partida
+
+Registrar a vitória em Mirage e conferir o resumo individual: uma partida,
+uma vitória, K/D 2,00, KDA 2,50, ADR 100, HS% 40%, KAST% 75% e Win Rate 100%.
+A captura mostra o dashboard após o registro; não é uma captura independente
+do preenchimento de todos os campos do formulário.
+
+![QA-INT-006 — Dashboard após o primeiro registro](docs/evidencias/QA-INT-006-REGISTRARPARTIDA.png)
+
+#### 4. Segundo registro e métricas acumuladas
+
+Registrar a derrota em Inferno e conferir duas partidas, uma vitória, uma derrota
+e nenhum empate. Comparar o resumo acumulado com os valores esperados abaixo.
+
+![QA-INT-006 — Resumo acumulado das duas partidas](docs/evidencias/QA-INT-006-ACUMULOREGISTRO.png)
+
+#### 5. Estatísticas por mapa e Best/Worst Map
+
+Abrir Estatísticas por mapa e conferir a classificação existente: Win Rate, ADR
+e K/D decrescentes, com nome crescente no desempate final. Best Map deve ser
+`de_mirage`; Worst Map deve ser `de_inferno`, ambos com uma partida.
+
+![QA-INT-006 — Estatísticas por mapa e Best/Worst Map](docs/evidencias/QA-INT-006-ESTATISTICAMAPAS.png)
+
+#### 6. Histórico e isolamento
+
+Conferir no histórico os dois registros de `QA_TESTE_A`, com a derrota em Inferno
+antes da vitória em Mirage por desempate de ID na mesma data. Alternar a seleção
+de jogadores e verificar que os dados não se misturam. O isolamento foi confirmado
+manualmente pelo usuário; não há captura independente dessa alternância entre
+as sete evidências disponíveis. A imagem abaixo documenta o histórico de `QA_TESTE_A`.
+
+![QA-INT-006 — Histórico das duas partidas de QA_TESTE_A](docs/evidencias/QA-INT-006-HISTORICO.png)
+
+#### 7. Persistência após reinicialização
+
+Encerrar e reiniciar o Streamlit, selecionar novamente `QA_TESTE_A` e verificar
+que as duas partidas e o resumo permanecem disponíveis. A sequência de
+reinicialização e a persistência foram confirmadas manualmente pelo usuário.
+`QA-INT-006-TESTEPERSISTIDO.png` é evidência complementar do estado restaurado;
+a captura isolada não prova a sequência de encerramento e reinicialização.
+
+![QA-INT-006 — Estado restaurado, complementar à confirmação manual de persistência](docs/evidencias/QA-INT-006-TESTEPERSISTIDO.png)
+
+### Resultados esperados
+
+- Cadastro e seleção corretos, com rejeição amigável de nickname duplicado.
+- Partidas associadas ao jogador selecionado, sem mistura com outros jogadores.
+- Métricas individuais e acumuladas calculadas pelos módulos existentes.
+- Histórico e classificação por mapa coerentes com vitória e derrota registradas.
+- Persistência de jogadores, partidas e estatísticas após reinicializar o aplicativo.
+
+| Indicador acumulado | Esperado | Obtido |
+| --- | ---: | ---: |
+| Partidas | 2 | 2 |
+| Vitórias | 1 | 1 |
+| Derrotas | 1 | 1 |
+| Empates | 0 | 0 |
+| K/D | 1,20 | 1,20 |
+| KDA | 1,52 | 1,52 |
+| ADR | 80 | 80 |
+| HS% | 40% | 40% |
+| KAST% | 62,50% | 62,50% |
+| Win Rate | 50% | 50% |
+
+### Resultados obtidos
+
+| Verificação | Resultado |
+| --- | --- |
+| Cadastro e seleção | **PASSOU**; `QA_TESTE_A` disponível e selecionável |
+| Nickname duplicado | **PASSOU**; mensagem de conflito exibida |
+| Registro e métricas individuais/acumuladas | **PASSOU**; resumo conforme tabela acima |
+| Best Map / Worst Map | `de_mirage` / `de_inferno` |
+| Histórico | Duas partidas, vitória e derrota, na ordem esperada |
+| Isolamento entre jogadores | **PASSOU**, confirmado manualmente; sem captura independente da alternância |
+| Persistência após reinicialização | **PASSOU**, confirmada manualmente; captura complementar do estado restaurado |
+
+### Conclusão
+
+**PASSOU.** O usuário confirmou a aprovação dos fluxos funcionais e da persistência
+após reinicialização. A revisão técnica do código e dos testes foi aprovada pelo
+QA Lead. As sete imagens acima foram confirmadas no workspace, com seus nomes
+originais; nem todas as etapas possuem evidência visual independente.
+
+---
+
 ## Limitações e observações
 
-- Os cinco cenários foram executados em **SQLite em memória**; eles não validam a persistência após fechar e reabrir um banco em arquivo.
+- QA-INT-001 a QA-INT-005 usam **SQLite em memória**. QA-INT-006 usa SQLite persistente na interface local, com reinicialização confirmada manualmente pelo usuário e captura complementar do estado restaurado.
 - Os casos cobrem os comportamentos específicos descritos, sem representar cobertura completa das funcionalidades.
 - As capturas de QA-INT-001 e QA-INT-002 documentam reexecuções dos cenários originalmente realizados no console interativo.
 - Os scripts de evidência foram executados localmente e, até esta revisão, não fazem parte do repositório publicado.
-- A suíte automatizada do projeto é **separada** destes cinco cenários manuais documentados: **195 testes aprovados localmente**, sendo **167 anteriores preservados e 28 novos testes de análise por mapa**. Os 195 testes ainda não foram validados no GitHub Actions. A manutenção da base `0c17c96` já foi aprovada remotamente com 167 testes e 100% de cobertura Python, conforme validação informada pelo usuário. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
+- A suíte automatizada do projeto é **separada** destes seis cenários manuais documentados: **235 testes aprovados localmente**, sendo **195 anteriores preservados e 40 novos testes de serviços e interface**. Os 235 testes ainda não foram validados no GitHub Actions. A manutenção da base `0c17c96` já foi aprovada remotamente com 167 testes e 100% de cobertura Python, conforme validação informada pelo usuário. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 ## Resultado geral
 
-**5 cenários de integração executados — 5 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
+**6 cenários de integração executados — 6 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
 
 A documentação reúne procedimentos, resultados esperados, resultados obtidos e evidências visuais para apoiar a revisão técnica e a evolução do portfólio de QA.
