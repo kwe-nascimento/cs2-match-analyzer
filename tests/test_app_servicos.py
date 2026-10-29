@@ -161,3 +161,41 @@ def test_fecha_conexao_em_erro(db_path):
             raise RuntimeError("teste")
     with pytest.raises(sqlite3.ProgrammingError):
         conn.execute("SELECT 1")
+
+
+def test_cadastro_preserva_transacao_anterior(db_path):
+    with abrir_banco() as conn:
+        original = cadastrar_jogador(conn, "original")
+        pendente = conn.execute(
+            "INSERT INTO player (nickname) VALUES (?)", ("pendente",)
+        ).lastrowid
+        antes = listar_jogadores(conn)
+        alteracoes = conn.total_changes
+        assert conn.in_transaction
+        with pytest.raises(ValueError, match="Conclua a transação anterior antes de cadastrar o jogador"):
+            cadastrar_jogador(conn, "nao_inserir", "123")
+        assert conn.in_transaction
+        assert listar_jogadores(conn) == antes
+        assert conn.total_changes == alteracoes
+        assert conn.execute("SELECT nickname FROM player WHERE player_id=?", (pendente,)).fetchone() == ("pendente",)
+        # Uma conexão independente só enxerga o cadastro já confirmado.
+        with abrir_banco() as observador:
+            assert listar_jogadores(observador) == [(original, "original")]
+        assert conn.in_transaction
+        conn.rollback()  # Responsabilidade exclusiva do chamador.
+        assert not conn.in_transaction
+        assert listar_jogadores(conn) == [(original, "original")]
+    with abrir_banco() as conn:
+        assert listar_jogadores(conn) == [(original, "original")]
+
+
+def test_cadastro_sem_transacao_confirma_e_persiste(db_path):
+    with abrir_banco() as conn:
+        assert not conn.in_transaction
+        player_id = cadastrar_jogador(conn, "  novo  ", " 7654321 ")
+        assert not conn.in_transaction
+        assert listar_jogadores(conn) == [(player_id, "novo")]
+    with abrir_banco() as conn:
+        assert conn.execute(
+            "SELECT player_id, nickname, steam_id FROM player"
+        ).fetchall() == [(player_id, "novo", "7654321")]

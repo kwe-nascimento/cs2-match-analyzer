@@ -6,11 +6,12 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 ## 📍 Onde estou
 - Modelagem inicial do banco de dados SQLite concluída.
 - Schema SQL implementado com regras de integridade.
-- 235 testes automatizados aprovados localmente: 195 anteriores preservados e 40 novos testes de serviços e interface Streamlit.
-- Base `0c17c96`: 167 testes e 100% de cobertura Python aprovados no GitHub Actions, conforme validação informada pelo usuário. A suíte atual de 235 testes aguarda publicação e execução remota.
+- 237 testes automatizados aprovados localmente: 235 anteriores preservados e duas novas regressões transacionais. Manutenção ainda não publicada nem executada remotamente.
+- MVP Visual 1 publicado no commit `6a8d43d`: 235 testes aprovados no GitHub Actions, Linux/Python 3.12.15, src com 100% (106 statements e 26 branches); [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660).
+- Base `0c17c96`: 167 testes e 100% de cobertura Python aprovados no GitHub Actions, conforme validação informada pelo usuário. A suíte atual da manutenção (237 testes locais) aguarda publicação e execução remota.
 - Commit `289c378`: 138 testes aprovados no GitHub Actions; [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 - Seis cenários manuais de integração documentados e aprovados; QA-INT-006 concluído pelo usuário em 29/10/2026, incluindo persistência após reinicializar o Streamlit. QA-INT-005 preservado com sua execução em 29/10/2026 às 14:47:48 (UTC−03:00).
-- Cobertura local: src com 100% (106 statements, 26 branches); app.py com 98% na medição separada da UI.
+- Cobertura local desta manutenção: src com 100% (108 statements, 28 branches); app.py com 98% na medição separada da validação local anterior.
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
 - Registro de partidas implementado em `src/registros.py`.
@@ -20,9 +21,9 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 - Análises por mapa e Best/Worst Map implementados; interface local Streamlit disponível em `app.py`.
 
 ## ➡️ PRÓXIMO PASSO
-MVP visual 1 aprovado na revisão técnica e no QA-INT-006. Preparar a próxima
-revisão de staging; aguardar autorização antes de adicionar arquivos ao índice,
-criar commit ou publicar. Validação remota da suíte de 235 testes pendente.
+MVP visual 1 publicado em `6a8d43d` e aprovado remotamente com 235 testes.
+Aguardar revisão do QA Lead para publicar a manutenção transacional/Actions,
+validada com 237 testes locais; sem commit ou push nesta sessão.
 
 ## ✅ Decisões tomadas (não rediscutir)
 - Banco guarda só dados brutos; métricas são calculadas depois
@@ -45,10 +46,10 @@ criar commit ou publicar. Validação remota da suíte de 235 testes pendente.
 1. **Concluído:** implementar funções para registrar partidas e performances e consultar o histórico (Python).
 2. **Concluído:** criar testes automatizados para registro e consulta (Pytest).
 3. **Concluído:** implementar métricas K/D, KDA, HS%, ADR, KAST% e Win Rate, com testes.
-4. **Implementado e validado no QA-INT-005:** análises de desempenho por mapa, incluindo Best/Worst Map; publicação aguarda autorização.
+4. **Implementado e validado no QA-INT-005:** análises de desempenho por mapa, incluindo Best/Worst Map; publicado antes desta manutenção.
 5. Criar um plano de testes documentando cenários positivos, negativos e valores-limite.
 6. Elaborar um modelo de Bug Report para documentar defeitos encontrados.
-7. **Implementado e validado no QA-INT-006:** MVP visual 1 com Streamlit para cadastro, registro e estatísticas; publicação pendente.
+7. **Implementado e validado no QA-INT-006:** MVP visual 1 com Streamlit para cadastro, registro e estatísticas; publicado em `6a8d43d`.
 8. Desenvolver testes funcionais e de integração para validar os fluxos da aplicação.
 9. Implementar gráficos e indicadores visuais para acompanhar a evolução do desempenho.
 10. **Concluído:** cobertura com pytest-cov; manutenção `0c17c96` aprovada remotamente com 167 testes e 100% de cobertura Python.
@@ -218,7 +219,8 @@ Observações fora do escopo, sem correções nesta etapa:
   SQLite pode ter contenção de escrita; não há autenticação, edição, exclusão,
   importação externa ou hospedagem. Nenhum erro bloqueante nos testes executados.
 - Revisão técnica e validação manual QA-INT-006 concluídas e aprovadas.
-  Próximo passo: revisão de staging e autorização antes da publicação.
+  Publicação concluída em `6a8d43d`; 235 testes e 100% de cobertura em src
+  aprovados no GitHub Actions.
   Cinco cenários anteriores preservados; total atual de seis aprovados.
 
 ## Conclusão do QA-INT-006 — 2026-10-29
@@ -234,13 +236,35 @@ Observações fora do escopo, sem correções nesta etapa:
 - 235 testes locais aprovados. Cobertura informada no relatório: src com 100%
   (106 statements e 26 branches); app.py com 98% na medição separada da UI,
   com linhas 95–96 e alternativa do bloco __main__ não cobertas.
-- A execução dos 235 testes no GitHub Actions permanece pendente de publicação.
+- Os 235 testes foram posteriormente aprovados no GitHub Actions no commit
+  `6a8d43d`; [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660).
 - Limitações preservadas: versão local sem autenticação, edição/exclusão ou
   importação; proteção de duplicação temporária por sessão, sem deduplicação
   global; possível contenção de escrita SQLite; amostras pequenas por mapa.
 
 ### Backlog técnico — não bloqueia o MVP atual
 
-- Revisar o controle transacional de cadastrar_jogador() para evitar confirmar transações anteriores do chamador, com teste de regressão.
+- **Concluído nesta manutenção:** revisar o controle transacional de cadastrar_jogador() para evitar confirmar transações anteriores do chamador, com teste de regressão.
 
-Melhoria apenas registrada; nenhum ajuste de código ou teste realizado nesta etapa.
+A melhoria foi apenas registrada na finalização documental anterior; sua implementação
+e as duas regressões correspondentes foram concluídas na manutenção abaixo.
+
+## Manutenção final do MVP Visual 1 — 2026-10-29
+
+- Base `6a8d43d`: MVP publicado, 235 testes aprovados remotamente em Linux com
+  Python 3.12.15 e src com 100% (106 statements, 26 branches). Sem hospedagem pública.
+- `cadastrar_jogador()` agora rejeita conexão com transação anterior pendente
+  antes de entrar em with conn. ValueError preserva os dados pendentes e a
+  transação aberta; o chamador decide commit/rollback. Cadastro normal e
+  rollback de duplicidade próprios preservados.
+- Duas regressões: transação pendente sem confirmação/reversão indevida, incluindo
+  observador independente e rollback do chamador; cadastro normal persistido
+  após reabertura. Os 235 testes anteriores e testes AppTest foram preservados.
+- Actions atualizadas para checkout@v7 e setup-python@v7. Metadados oficiais
+  confirmam node24; configurações de runner ubuntu-latest, Python 3.12,
+  eventos, dependências e pytest-cov preservadas. YAML analisado com parser.
+- Validação local: 237 testes aprovados; src com 100%, 108 statements e 28 branches.
+  A manutenção ainda aguarda publicação/CI; YAML válido não prova a execução das
+  Actions. A ausência do aviso de Node.js 20 será conferida nos próximos logs.
+- Seis cenários manuais e suas evidências preservados integralmente; sem QA-INT-007.
+- Nenhuma nova dependência, tela, métrica ou alteração visual. Sem commit ou push.

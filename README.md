@@ -21,8 +21,12 @@ mapa incluem Best/Worst Map e podem ser consultadas na interface gráfica local.
 
 ## Quality Assurance
 
-O projeto possui **235 testes automatizados com Pytest aprovados localmente**
-(195 anteriores preservados e 40 novos testes de serviços e interface), além de **6 cenários
+O MVP Visual 1 foi publicado no commit `6a8d43d`, com **235 testes aprovados no GitHub Actions** (Linux, Python 3.12.15) e **100% de cobertura em `src/`**: [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660). Foram cobertos 106 statements e 26 branches. A interface continua sendo um aplicativo local, sem hospedagem pública.
+
+A manutenção atual possui **237 testes aprovados localmente** (235 anteriores e 2 novas regressões transacionais), com 100% de cobertura em `src/` (108 statements e 28 branches). Sua publicação e execução no GitHub Actions ainda estão pendentes.
+
+O projeto possui **237 testes automatizados com Pytest aprovados localmente**
+(235 anteriores preservados e 2 novas regressões transacionais), além de **6 cenários
 manuais de integração documentados e aprovados, com evidências**. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 | ID | Cenário de integração | Resultado |
@@ -123,10 +127,12 @@ python -B -m pytest -q -p no:cacheprovider --cov=src --cov-branch --cov-report=t
 
 O relatório mostra linhas, branches e linhas não cobertas, sem percentual mínimo
 obrigatório. Para HTML, use `--cov-report=html`; a saída `htmlcov/` é ignorada
-pelo Git. O workflow exibirá cobertura nos logs após a publicação.
+pelo Git. O workflow já exibe cobertura nos logs; a atualização das Actions desta
+manutenção aguarda a próxima publicação.
 A base `0c17c96` teve 167 testes e 100% de cobertura Python aprovados no GitHub
-Actions, conforme validação informada pelo usuário. A suíte atual de 235 testes
-ainda aguarda publicação e execução no GitHub Actions.
+Actions, conforme validação informada pelo usuário. O MVP Visual 1 (`6a8d43d`)
+também foi aprovado remotamente com 235 testes. Os 237 testes da manutenção
+atual foram aprovados localmente e aguardam execução remota.
 
 ## Análise por mapa
 
@@ -162,8 +168,8 @@ Somente performances do jogador entram no resumo, via JOIN parametrizado.
 As consultas não armazenam métricas nem executam commit, rollback ou close.
 QA-INT-005 foi executado pelo usuário em 29/10/2026, às 14:47:48 (UTC−03:00),
 e aprovado pelo QA Lead após revisão da captura. Os seis cenários manuais
-estão documentados em QA.md. Os 235 testes desta etapa ainda não foram
-validados no GitHub Actions. QA-INT-006 foi aprovado, incluindo os fluxos da interface e a persistência confirmada manualmente.
+estão documentados em QA.md. Os 235 testes do MVP foram aprovados no GitHub
+Actions; as duas novas regressões da manutenção aguardam execução remota. QA-INT-006 foi aprovado, incluindo os fluxos da interface e a persistência confirmada manualmente.
 
 ## Interface gráfica — MVP visual 1
 
@@ -213,12 +219,13 @@ python -B -m pytest -q -p no:cacheprovider --cov=src --cov-branch --cov-report=t
 python -B -m pytest -q -p no:cacheprovider tests/test_app_servicos.py tests/test_app_streamlit.py --cov=src.app_servicos --cov=app --cov-branch --cov-report=term-missing
 ```
 
-Resultados locais: 235 testes aprovados, 100% de cobertura em src e 98% em app.py
-na medição separada da interface. A validação funcional no navegador foi concluída
+Resultados locais desta manutenção: 237 testes aprovados e 100% de cobertura em
+src. A cobertura de app.py foi de 98% na medição separada da validação local anterior. A validação funcional no navegador foi concluída
 e aprovada no QA-INT-006; a cobertura automatizada é uma verificação separada.
 
 Limitações: aplicativo local sem login; não há edição, exclusão, importação da
 Steam ou hospedagem pública. A seleção de jogador organiza os dados, sem oferecer
 controle de acesso. Gravações SQLite concorrentes podem exigir nova tentativa.
 Best/Worst Map continua sem mínimo de partidas: amostras pequenas podem ser pouco
-representativas. A publicação e a validação dos 235 testes no GitHub Actions permanecem pendentes.
+representativas. O MVP foi publicado com 235 testes aprovados remotamente; apenas esta manutenção
+(237 testes locais) aguarda publicação e validação no GitHub Actions.

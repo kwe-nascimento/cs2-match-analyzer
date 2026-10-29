@@ -40,6 +40,8 @@ def cadastrar_jogador(conn: sqlite3.Connection, nickname: str, steam_id: str = "
     nickname = nickname.strip()
     if not nickname:
         raise ValueError("Informe um nickname que não contenha apenas espaços.")
+    if conn.in_transaction:
+        raise ValueError("Conclua a transação anterior antes de cadastrar o jogador.")
     with conn:
         cursor = conn.execute(
             "INSERT INTO player (nickname, steam_id) VALUES (?, ?)",
