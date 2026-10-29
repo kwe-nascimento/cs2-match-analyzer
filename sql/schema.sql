@@ -74,3 +74,37 @@ BEGIN
         SELECT rounds_time + rounds_adversario FROM partida WHERE partida_id = NEW.partida_id
     );
 END;
+
+-- Impede que o placar invalide performances existentes.
+CREATE TRIGGER IF NOT EXISTS trg_partida_placar_update
+BEFORE UPDATE OF rounds_time, rounds_adversario ON partida
+WHEN EXISTS (
+    SELECT 1 FROM performance
+    WHERE performance.partida_id = OLD.partida_id
+      AND performance.rounds_played <> (NEW.rounds_time + NEW.rounds_adversario)
+)
+BEGIN
+    SELECT RAISE(ABORT, 'placar difere dos rounds_played registrados');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_partida_data_insert
+BEFORE INSERT ON partida
+WHEN substr(NEW.data_partida, 1, 4) = '0000'
+    OR COALESCE(
+        strftime('%Y-%m-%d', NEW.data_partida, '+0 days') = NEW.data_partida,
+        0
+    ) = 0
+BEGIN
+    SELECT RAISE(ABORT, 'data_partida invalida');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_partida_data_update
+BEFORE UPDATE OF data_partida ON partida
+WHEN substr(NEW.data_partida, 1, 4) = '0000'
+    OR COALESCE(
+        strftime('%Y-%m-%d', NEW.data_partida, '+0 days') = NEW.data_partida,
+        0
+    ) = 0
+BEGIN
+    SELECT RAISE(ABORT, 'data_partida invalida');
+END;

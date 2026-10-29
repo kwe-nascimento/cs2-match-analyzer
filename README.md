@@ -22,10 +22,9 @@ mapa e uma interface gráfica permanecem como funcionalidades futuras.
 
 ## Quality Assurance
 
-O projeto possui **138 testes automatizados com Pytest aprovados localmente**
-(116 anteriores preservados e 22 novos testes de métricas), além de **4 cenários
-de integração documentados com evidências**. A validação desta atualização no
-**GitHub Actions ainda não foi realizada**.
+O projeto possui **167 testes automatizados com Pytest aprovados localmente**
+(138 anteriores preservados e 29 novos testes de manutenção), além de **4 cenários
+de integração documentados com evidências**. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 | ID | Cenário de integração | Resultado |
 |---|---|---|
@@ -50,9 +49,10 @@ python -m pip install -r requirements.txt
 python -m pytest -v
 ```
 
-Os 138 testes verificam regras do schema, registros válidos e inválidos,
+Os 167 testes verificam regras do schema, registros válidos e inválidos,
 relacionamentos, duplicatas, persistência, rollback, consultas do histórico
-de partidas e cálculos individuais e acumulados de métricas.
+de partidas, cálculos individuais e acumulados de métricas, validade das datas
+e consistência dos placares após atualização.
 
 ## Utilização
 
@@ -109,3 +109,14 @@ tests/test_metricas.py       # Testes das métricas de desempenho
 ```
 
 Decisões e planejamento estão em [NOTAS.md](NOTAS.md).
+
+## Cobertura de testes
+
+```bash
+python -B -m pytest -q -p no:cacheprovider --cov=src --cov-branch --cov-report=term-missing
+```
+
+O relatório mostra linhas, branches e linhas não cobertas, sem percentual mínimo
+obrigatório. Para HTML, use `--cov-report=html`; a saída `htmlcov/` é ignorada
+pelo Git. O workflow exibirá cobertura nos logs após a publicação.
+Os novos testes da manutenção de 29/10/2026 aguardam execução no GitHub Actions.

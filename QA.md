@@ -258,7 +258,7 @@ Os valores foram validados por `assert` com `math.isclose`, incluindo proteção
 - Os casos cobrem os comportamentos específicos descritos, sem representar cobertura completa das funcionalidades.
 - As capturas de QA-INT-001 e QA-INT-002 documentam reexecuções dos cenários originalmente realizados no console interativo.
 - Os scripts de evidência foram executados localmente e, até esta revisão, não fazem parte do repositório publicado.
-- A suíte automatizada do projeto é **separada** destes quatro cenários documentados: **138 testes aprovados localmente**, sendo **116 anteriores preservados e 22 novos testes de métricas**. A validação desta atualização no **GitHub Actions ainda não foi realizada**.
+- A suíte automatizada do projeto é **separada** destes quatro cenários documentados: **167 testes aprovados localmente**, sendo **138 anteriores preservados e 29 novos testes de manutenção**. A validação dos 167 testes no GitHub Actions ocorrerá após a publicação. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 ## Resultado geral
 

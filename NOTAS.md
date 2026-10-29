@@ -6,8 +6,9 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 ## 📍 Onde estou
 - Modelagem inicial do banco de dados SQLite concluída.
 - Schema SQL implementado com regras de integridade.
-- 138 testes automatizados aprovados localmente com Pytest: 116 anteriores preservados e 22 novos testes de métricas.
-- Validação desta atualização no GitHub Actions ainda não realizada.
+- 167 testes automatizados aprovados localmente com Pytest: 138 anteriores preservados e 29 novos testes de manutenção.
+- A validação dos 167 testes no GitHub Actions ocorrerá após a publicação.
+- Commit `289c378`: 138 testes aprovados no GitHub Actions; [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 - Quatro cenários de integração documentados; QA-INT-004 aprovado em 28/10/2026 às 18:39:17.
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
@@ -56,7 +57,7 @@ compreendendo o código antes de avançar.
 7. Implementar uma interface gráfica simples com Streamlit para registrar partidas e visualizar estatísticas.
 8. Desenvolver testes funcionais e de integração para validar os fluxos da aplicação.
 9. Implementar gráficos e indicadores visuais para acompanhar a evolução do desempenho.
-10. Adicionar relatórios de cobertura de testes com pytest-cov.
+10. **Concluído nesta manutenção:** configurar cobertura com pytest-cov; execução remota pendente de publicação.
 11. Aprimorar a documentação do projeto com exemplos de utilização e resultados dos testes.
 
 ### ✅ Etapas concluídas
@@ -143,5 +144,23 @@ Observações fora do escopo, sem correções nesta etapa:
 - Validação local: `python -B -m pytest -q -p no:cacheprovider`: **138 testes aprovados**.
 - QA-INT-004 aprovado em **28/10/2026 às 18:39:17**; evidência em
   [QA-INT-004](docs/evidencias/QA-INT-004.png) e cenário documentado em [QA.md](QA.md).
-- A validação desta atualização no GitHub Actions ainda não foi realizada.
+- Commit `289c378`: 138 testes aprovados no GitHub Actions; [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 - Próxima funcionalidade: análises de desempenho por mapa, incluindo Best/Worst Map.
+
+## Manutenção de integridade — 2026-10-29
+
+- Triggers de calendário em INSERT e UPDATE rejeitam datas inexistentes,
+  formatos inválidos e ano 0000, incluindo retornos NULL do SQLite.
+- Trigger de placar impede mudanças do total quando existe performance
+  incompatível; preserva mudanças de soma igual e partidas sem performance.
+- `init_db()` instala os triggers também em bancos existentes, sem recriar
+  tabelas, duplicar triggers ou alterar registros legados. Dados antigos
+  inválidos não são auditados nem corrigidos automaticamente.
+- Caches retirados apenas do índice, com cópias locais preservadas; .gitignore,
+  nomes de __init__ corrigidos e workflow redundante removido.
+- pytest-cov mede linhas e branches, exibindo linhas não cobertas, sem limite
+  mínimo obrigatório. HTML local em htmlcov/ ignorado pelo Git.
+- Regressões cobrem calendário, preservação após rejeição, placares com um e
+  dois jogadores, inicialização repetida e atualização de banco existente.
+- A execução desta manutenção no GitHub Actions permanece pendente de
+  publicação e revisão do QA Lead. Best/Worst Map e Streamlit seguem futuros.
