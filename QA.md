@@ -13,10 +13,11 @@ Documentação dos cenários de integração do **CS2 Match Analyzer**, projeto 
 | **QA-INT-005** | Análise de desempenho por mapa | Agregação, classificação e isolamento | 29/10/2026 | **PASSOU** |
 | **QA-INT-006** | Validação funcional da interface Streamlit | Fluxos de UI, isolamento e persistência | 29/10/2026 | **PASSOU** |
 | **QA-INT-007** | Evolução histórica | Filtros, gráficos, isolamento, atualização e persistência | Registro em 30/10/2026 | **PASSOU** |
+| **QA-INT-008** | Seleção controlada de mapas | Formulário, personalizados e integração | Registro em 30/10/2026 | **APROVADO MANUALMENTE, COM OBSERVAÇÕES** |
 
-**Ambiente:** Python 3.12; QA-INT-001 a QA-INT-005 em SQLite em memória; QA-INT-006 e QA-INT-007 na interface local Streamlit com SQLite persistente; QA-INT-007 com banco isolado de QA.
+**Ambiente:** Python 3.12; QA-INT-001 a QA-INT-005 em SQLite em memória; QA-INT-006 e QA-INT-007 na interface local Streamlit com SQLite persistente; QA-INT-007 com banco isolado de QA; QA-INT-008 executado no navegador com jogador QA_MAPAS_A, sem caminho do banco visível nas capturas.
 
-**Execução:** QA-INT-001 a QA-INT-005 realizados por scripts Python iniciados manualmente no terminal, com verificações por `assert`; QA-INT-006 e QA-INT-007 executados pelo testador no navegador, incluindo reinicialização do Streamlit informada manualmente.
+**Execução:** QA-INT-001 a QA-INT-005 realizados por scripts Python iniciados manualmente no terminal, com verificações por `assert`; QA-INT-006 e QA-INT-007 executados pelo testador no navegador, incluindo reinicialização do Streamlit informada manualmente. QA-INT-008 executado pelo testador no navegador; etapa 5 combina relato e histórico posterior.
 
 **Escopo:** integração entre as funções Python e o banco SQLite; as capturas abaixo são evidências das execuções dos cenários.
 
@@ -628,7 +629,152 @@ A evidência documenta os estados visíveis, não todos os dados de entrada nem
 uma gravação contínua das ações. A identificação do banco no processo e a
 reinicialização não têm captura independente. O teste não é teste de carga
 nem prova de tendência estatística. A aprovação manual é independente dos
-260 testes locais; a execução remota dos 260 permanece pendente.
+260 testes locais à época. No fechamento do QA-INT-008, o QA Lead informou
+que esses 260 já foram aprovados remotamente; os 315 do seletor seguem pendentes no CI.
+
+---
+
+## QA-INT-008 — Seleção controlada de mapas
+
+| Campo | Detalhe |
+| --- | --- |
+| Tipo | Validação manual do formulário, catálogo, personalizados e integração |
+| Registro documental | 30/10/2026; horário exato não informado |
+| Ambiente | Windows, Python 3.12, Streamlit local no navegador; jogador de teste QA_MAPAS_A |
+| Base | main, commit `8ed917455d48586938c5b2eb69c1e74dd88fa6df`, com incremento local do seletor |
+| Resultado geral | **APROVADO MANUALMENTE, COM OBSERVAÇÕES** |
+
+### Objetivo, pré-condições e fontes
+
+Validar seleção obrigatória de mapa, gravação do identificador canônico,
+suporte personalizado, prevenção de nomes semelhantes, troca de seleção e
+integração com histórico, estatísticas por mapa e evolução. Pré-condições:
+incremento disponível, dependências instaladas, app iniciado e jogador de
+teste `QA_MAPAS_A` selecionado, inicialmente sem partidas.
+
+Fontes: nove capturas existentes e relato do testador fornecido pelo QA Lead.
+O caminho do banco usado no teste manual não é visível nas imagens e não foi
+informado neste fechamento. Nenhum banco pessoal ou banco do teste manual
+foi aberto, consultado ou alterado. As revalidações automatizadas usam bancos
+temporários, separadas da evidência manual.
+
+### Registros ao final do teste
+
+O jogador terminou com quatro partidas, todas em 30/10/2026, vitória 13 × 7.
+Dados abaixo transcritos de HISTORICO/SWTCHPRANUKE e ABAEVO2; razões
+individuais podem ter arredondamento de apresentação.
+
+| ID / ordem cronológica | Mapa | Kills | Deaths | Assists | Headshots | K/D | ADR | KAST% |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | de_inferno | 20 | 10 | 5 | 8 | 2 | 100 | 75 |
+| 2 | aim_custom | 10 | 5 | 3 | 4 | 2 | 0 | 0 |
+| 3 | de_mirage | 17 | 9 | 4 | 0 | 1,8889 | 85 | 70 |
+| 4 | de_nuke | 17 | 9 | 4 | 0 | 1,8889 | 85 | 70 |
+
+`Ineferno` foi rejeitado e não figura entre os quatro registros finais.
+Segundo o testador, `aim_custom` foi enviado antecipadamente por Enter,
+com **Damage = 0 e KAST Rounds = 0**. As capturas posteriores mostram ADR e
+KAST% iguais a zero, compatíveis com o relato, mas não mostram diretamente
+esses campos brutos no momento do envio. Os registros foram preservados;
+não houve correção, exclusão ou preenchimento retrospectivo. Zero pode ser
+legítimo e sua presença não prova, por si só, que um formulário está incompleto.
+
+### Seis etapas: resultados observados e evidências
+
+#### 1. Seleção obrigatória de mapa
+
+Tentar salvar sem escolher mapa. Esperado: nenhuma escolha automática e
+orientação de seleção obrigatória. Observado: seletor com “Selecione um mapa”
+e erro “Selecione o mapa da partida”. REGISTROSEMMAPA mostra o estado inicial
+sem partidas na Visão geral; não é, isoladamente, prova da tentativa de envio.
+SELECIONEMAPA documenta diretamente o formulário e a rejeição. **APROVADO**.
+
+![Estado inicial sem partidas](docs/evidencias/QA-INT-008-REGISTROSEMMAPA.png)
+![Seleção obrigatória e mensagem de rejeição](docs/evidencias/QA-INT-008-SELECIONEMAPA.png)
+
+#### 2. Registro de mapa oficial Inferno
+
+Selecionar Inferno e registrar a primeira partida. Esperado: salvar ID canônico
+`de_inferno`. Observado no histórico: `de_inferno`, vitória 13 × 7, 20 kills,
+10 deaths, 5 assists e 8 headshots. A captura mostra o registro resultante,
+não todo o preenchimento do formulário. **APROVADO**.
+
+![Histórico após registro de Inferno](docs/evidencias/QA-INT-008-HISTORICO.png)
+
+#### 3. Rejeição do nome incorreto Ineferno
+
+Selecionar Outro / Personalizado e informar `Ineferno`. Esperado: orientação
+para selecionar Inferno, sem criar outro nome de mapa. Observado: erro de
+semelhança indicando Inferno, com a entrada incorreta ainda visível. O relato
+confirma rejeição e o histórico final contém somente os quatro mapas listados.
+**APROVADO**; sem alegar inspeção do banco a partir da captura.
+
+![Ineferno rejeitado com sugestão de Inferno](docs/evidencias/QA-INT-008-NOMEERRADO.png)
+
+#### 4. Registro personalizado aim_custom
+
+Informar `aim_custom` na opção personalizada. Esperado: aceitar nome custom
+e preservá-lo normalizado. Observado: histórico com `aim_custom`, vitória
+13 × 7, 10 kills, 5 deaths, 3 assists e 4 headshots. Houve envio antecipado por
+Enter relatado pelo testador; Damage e KAST Rounds ficaram em zero. As abas de
+estatísticas/evolução exibem os zeros resultantes. **APROVADO COM OBSERVAÇÃO**
+de UX; os dados foram mantidos como registrados.
+
+![Histórico após aim_custom](docs/evidencias/QA-INT-008-HISTORICOAIMCUSTOM.png)
+
+#### 5. Troca do mapa durante o preenchimento
+
+Trocar o mapa durante o preenchimento e conferir os campos antes de enviar.
+O testador informou envios acidentais de partidas por Enter durante essa
+verificação. Informou também que repetiu o procedimento e os campos
+**permaneceram preenchidos ao trocar o mapa**.
+
+SWTCHPRANUKE mostra o histórico final com de_nuke, de_mirage, aim_custom e
+de_inferno. **A captura do histórico não comprova diretamente a preservação
+dos campos antes do envio**, nem registra a sequência de teclas ou a repetição.
+O resultado sobre os campos se baseia no relato do testador e não constitui
+garantia para toda troca/rerun. **APROVADO COM OBSERVAÇÕES**, com limitação
+de evidência visual e risco de envio involuntário documentados.
+
+![Histórico final após a verificação de troca](docs/evidencias/QA-INT-008-SWTCHPRANUKE.png)
+
+#### 6. Integração com estatísticas e evolução
+
+Abrir Estatísticas por mapa e Evolução. Observado: quatro mapas, cada um com
+uma partida e Win Rate 100%; Best Map `de_inferno`, Worst Map `aim_custom`.
+Na evolução: 4 partidas, K/D agregado 1,94, ADR 67,50 e KAST% 53,75%.
+Os três gráficos e tabela refletem os registros, incluindo ADR/KAST% zero de
+aim_custom e ordem crescente por ID na mesma data: Inferno, custom, Mirage,
+Nuke. **APROVADO** nos estados apresentados.
+
+![Integração com estatísticas por mapa](docs/evidencias/QA-INT-008-ESTATISTICAMAPA.png)
+![Evolução: indicadores e K/D](docs/evidencias/QA-INT-008-ABAEVO.png)
+![Evolução: ADR, KAST% e tabela](docs/evidencias/QA-INT-008-ABAEVO2.png)
+
+### Conclusão, observações e limites
+
+**APROVADO MANUALMENTE, COM OBSERVAÇÕES**, conforme decisão do QA Lead.
+Nove evidências encontradas e inspecionadas, nenhuma ausente. Nomes e extensão
+`.png` preservados, inclusive a grafia `SWTCHPRANUKE`. A ordem acima organiza o
+cenário; não implica uma gravação contínua ou timestamps de execução.
+
+O catálogo tem 11 mapas e não depende de Active Duty. Prevenção por semelhança
+é heurística: pode não detectar todo erro e pode bloquear custom muito próximo
+de oficial. A troca de mapa preservou os campos no procedimento repetido segundo
+o testador, sem comprovação direta nos prints. Não se declara persistência após
+reiniciar o app nem cobertura manual de todos os 11 mapas neste cenário.
+
+Backlog de UX, **sem implementação neste fechamento**:
+
+- Investigar/prevenir envio acidental do formulário por Enter.
+- Avaliar confirmação dos dados antes de gravar a partida.
+- Prevenir registros incompletos sem proibir valores zero legítimos; distinguir
+  falta de preenchimento de zero intencional.
+
+Os sete cenários anteriores mantêm seus resultados. A suíte automatizada é
+independente: 260 testes já aprovados remotamente, conforme informação do
+QA Lead; a versão do seletor tem 315 aprovados localmente e execução remota
+dos 315 pendente. Cobertura de 100% refere-se apenas a `src/`, não a `app.py`.
 
 ---
 
@@ -638,10 +784,10 @@ nem prova de tendência estatística. A aprovação manual é independente dos
 - Os casos cobrem os comportamentos específicos descritos, sem representar cobertura completa das funcionalidades.
 - As capturas de QA-INT-001 e QA-INT-002 documentam reexecuções dos cenários originalmente realizados no console interativo.
 - Os scripts de evidência foram executados localmente e, até esta revisão, não fazem parte do repositório publicado.
-- A suíte automatizada do projeto é **separada** destes sete cenários manuais documentados: **235 testes do MVP Visual 1 aprovados localmente e no GitHub Actions**, sendo **195 anteriores preservados e 40 novos testes de serviços e interface**. O commit `6a8d43d` passou no Linux com Python 3.12.15 e 100% de cobertura em `src/` (106 statements e 26 branches): [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660). A manutenção anterior soma **237 testes aprovados e já publicados no GitHub Actions**, conforme informação do QA Lead neste fechamento. O incremento atual soma **260 testes aprovados localmente**; sua execução remota está pendente. A cobertura de 100% aqui informada abrange apenas `src/`, não `app.py`. A manutenção da base `0c17c96` já foi aprovada remotamente com 167 testes e 100% de cobertura Python, conforme validação informada pelo usuário. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
+- A suíte automatizada do projeto é **separada** destes oito cenários manuais documentados: **235 testes do MVP Visual 1 aprovados localmente e no GitHub Actions**, sendo **195 anteriores preservados e 40 novos testes de serviços e interface**. O commit `6a8d43d` passou no Linux com Python 3.12.15 e 100% de cobertura em `src/` (106 statements e 26 branches): [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660). A manutenção anterior soma **237 testes aprovados e já publicados no GitHub Actions**, conforme informação do QA Lead neste fechamento. A evolução com **260 testes já foi aprovada remotamente**, conforme informação do QA Lead. O seletor soma **315 testes aprovados localmente**; execução remota dos 315 pendente. A cobertura de 100% aqui informada abrange apenas `src/`, não `app.py`. A manutenção da base `0c17c96` já foi aprovada remotamente com 167 testes e 100% de cobertura Python, conforme validação informada pelo usuário. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 ## Resultado geral
 
-**7 cenários de integração executados — 7 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
+**8 cenários de integração documentados — 7 aprovados e QA-INT-008 aprovado manualmente com observações.** As observações de UX e os limites da evidência estão registrados no cenário, sem alteração funcional neste fechamento.
 
 A documentação reúne procedimentos, resultados esperados, resultados obtidos e evidências visuais para apoiar a revisão técnica e a evolução do portfólio de QA.

@@ -84,7 +84,7 @@ def test_cadastro_duplicado_sem_traceback(app_env):
 def test_registro_dashboard_historico_e_reruns(app_env):
     app = iniciar()
     cadastrar(app, "eu")
-    texto(app, "Mapa").set_value("Mirage")
+    next(s for s in app.selectbox if s.label == "Mapa").select("de_mirage").run()
     for label, value in [("Kills", 20), ("Deaths", 10), ("Assists", 5),
                          ("Headshots", 10), ("Damage", 2000), ("KAST Rounds", 15)]:
         numero(app, label).set_value(value)
@@ -111,7 +111,7 @@ def test_registro_dashboard_historico_e_reruns(app_env):
         assert dados(conn) == antes
     assert all(b.label != "Salvar partida" for b in app.button)
     botao(app, "Registrar outra partida").click().run()
-    assert texto(app, "Mapa").value == ""
+    assert next(s for s in app.selectbox if s.label == "Mapa").value is None
     app.run()
     with abrir_banco() as conn:
         assert dados(conn) == antes
@@ -120,7 +120,7 @@ def test_registro_dashboard_historico_e_reruns(app_env):
 def test_performance_invalida_mostra_orientacao(app_env):
     app = iniciar()
     cadastrar(app, "eu")
-    texto(app, "Mapa").set_value("Mirage")
+    next(s for s in app.selectbox if s.label == "Mapa").select("de_mirage").run()
     numero(app, "Headshots").set_value(1)
     botao(app, "Salvar partida").click().run()
     assert not app.exception
@@ -230,4 +230,119 @@ def test_evolucao_isolamento_atualizacao_e_datas_iguais(app_env):
     assert list(aba.dataframe[0].value["Mapa"]) == ["de_mirage", "de_nuke", "de_inferno", "de_mirage"]
     with abrir_banco() as conn:
         assert dados(conn) == antes
+    assert not app.exception
+
+
+def seletor_mapa(app):
+    return next(s for s in app.selectbox if s.label == "Mapa")
+
+
+@pytest.mark.parametrize("rotulo,identificador", [
+    ("Mirage", "de_mirage"), ("Inferno", "de_inferno"), ("Nuke", "de_nuke"),
+    ("Dust II", "de_dust2"), ("Ancient", "de_ancient"), ("Anubis", "de_anubis"),
+    ("Cache", "de_cache"), ("Train", "de_train"), ("Overpass", "de_overpass"),
+    ("Vertigo", "de_vertigo"), ("Office", "cs_office"),
+])
+def test_seletor_oficial_grava_id_canonico(app_env, rotulo, identificador):
+    app = iniciar()
+    cadastrar(app, "eu")
+    assert seletor_mapa(app).value is None
+    assert rotulo in seletor_mapa(app).options
+    assert not any(t.label == "Mapa personalizado" for t in app.text_input)
+    seletor_mapa(app).select(identificador).run()
+    botao(app, "Salvar partida").click().run()
+    assert not app.exception
+    with abrir_banco() as conn:
+        assert conn.execute("SELECT mapa FROM partida").fetchall() == [(identificador,)]
+    assert app.dataframe[0].value.iloc[0]["Mapa"] == identificador
+    assert aba_evolucao(app).dataframe[0].value.iloc[0]["Mapa"] == identificador
+    assert {m.label: m.value for m in app.metric}["Best Map"] == identificador
+
+
+def test_seletor_exige_escolha_e_nao_grava(app_env):
+    app = iniciar()
+    cadastrar(app, "eu")
+    app.run()
+    assert seletor_mapa(app).value is None
+    botao(app, "Salvar partida").click().run()
+    assert any("Selecione o mapa" in e.value for e in app.error)
+    assert not app.exception
+    with abrir_banco() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM partida").fetchone() == (0,)
+        assert conn.execute("SELECT COUNT(*) FROM performance").fetchone() == (0,)
+
+
+@pytest.mark.parametrize("entrada,esperado", [
+    ("  aim_custom  ", "aim_custom"), ("  Minha   Arena  ", "minha_arena"),
+    ("Dust II", "de_dust2"), ("Office", "cs_office"),
+])
+def test_seletor_custom_valido_e_oficial_digitado(app_env, entrada, esperado):
+    from src.catalogo_mapas import OUTRO_MAPA
+    app = iniciar()
+    cadastrar(app, "eu")
+    seletor_mapa(app).select(OUTRO_MAPA).run()
+    texto(app, "Mapa personalizado").set_value(entrada)
+    botao(app, "Salvar partida").click().run()
+    assert not app.exception
+    with abrir_banco() as conn:
+        assert conn.execute("SELECT mapa FROM partida").fetchall() == [(esperado,)]
+
+
+@pytest.mark.parametrize("entrada,mensagem", [("", "Informe o mapa"), ("   ", "Informe o mapa"), ("mirrage", "Mirage")])
+def test_seletor_custom_invalido_sem_gravacao(app_env, entrada, mensagem):
+    from src.catalogo_mapas import OUTRO_MAPA
+    app = iniciar()
+    cadastrar(app, "eu")
+    seletor_mapa(app).select(OUTRO_MAPA).run()
+    texto(app, "Mapa personalizado").set_value(entrada)
+    botao(app, "Salvar partida").click().run()
+    assert not app.exception
+    assert any(mensagem in e.value for e in app.error)
+    with abrir_banco() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM partida").fetchone() == (0,)
+        assert conn.execute("SELECT COUNT(*) FROM performance").fetchone() == (0,)
+
+
+def test_seletor_troca_custom_oficial_e_isola_jogadores(app_env):
+    from src.catalogo_mapas import OUTRO_MAPA
+    app = iniciar()
+    cadastrar(app, "A")
+    seletor_mapa(app).select(OUTRO_MAPA).run()
+    texto(app, "Mapa personalizado").set_value("mirrage")
+    # Submissão inválida mantém a entrada; escolher oficial não reutiliza o texto.
+    botao(app, "Salvar partida").click().run()
+    seletor_mapa(app).select("cs_office").run()
+    assert not any(t.label == "Mapa personalizado" for t in app.text_input)
+    cadastrar(app, "B")
+    assert seletor_mapa(app).value is None
+    app.selectbox(key="jogador").select(1).run()
+    # Widgets não renderizados podem ser descartados pelo Streamlit.
+    assert seletor_mapa(app).value in (None, "cs_office")
+    seletor_mapa(app).select("cs_office").run()
+    botao(app, "Salvar partida").click().run()
+    with abrir_banco() as conn:
+        assert conn.execute("SELECT mapa FROM partida").fetchall() == [("cs_office",)]
+        assert conn.execute("SELECT player_id FROM performance").fetchall() == [(1,)]
+    assert not app.exception
+
+
+def test_seletor_preserva_registros_legados_sem_migracao(app_env):
+    eu, _, stats = preparar_evolucao()
+    with abrir_banco() as conn:
+        salvar_partida_completa(conn, eu, date(2026, 10, 4), "Dust II", 13, 7, stats)
+        salvar_partida_completa(conn, eu, date(2026, 10, 5), "mirrage", 13, 7, stats)
+        antes = dados(conn)
+    app = iniciar()
+    app.selectbox(key="jogador").select(eu).run()
+    seletor_mapa(app).select("de_dust2").run()
+    with abrir_banco() as conn:
+        assert dados(conn) == antes
+    botao(app, "Salvar partida").click().run()
+    with abrir_banco() as conn:
+        depois = dados(conn)
+        assert depois[0] == antes[0]
+        assert depois[1][:-1] == antes[1]
+        assert depois[2][:-1] == antes[2]
+        assert depois[1][-1][2] == "de_dust2"
+    assert set(app.dataframe[0].value["Mapa"]) >= {"dust_ii", "de_mirrage", "de_dust2"}
     assert not app.exception

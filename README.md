@@ -25,9 +25,9 @@ O MVP Visual 1 foi publicado no commit `6a8d43d`, com **235 testes aprovados no 
 
 A manutenção anterior possui **237 testes aprovados localmente** (235 anteriores e 2 novas regressões transacionais), com 100% de cobertura em `src/` (108 statements e 28 branches). Essa manutenção já foi publicada e aprovada no GitHub Actions, conforme informação do QA Lead.
 
-O projeto possui **260 testes automatizados com Pytest aprovados localmente**
-(237 anteriores preservados e 23 novos), além de **7 cenários
-manuais de integração documentados e aprovados, com evidências**. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
+O projeto possui **315 testes automatizados com Pytest aprovados localmente**
+(260 anteriores preservados e 55 novos no seletor de mapas), além de **8 cenários
+manuais documentados: 7 aprovados e QA-INT-008 aprovado com observações, com evidências**. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 | ID | Cenário de integração | Resultado |
 |---|---|---|
@@ -38,6 +38,7 @@ manuais de integração documentados e aprovados, com evidências**. O commit `2
 | **QA-INT-005** | Análise de desempenho por mapa e Best/Worst Map | **PASSOU** |
 | **QA-INT-006** | Validação funcional da interface Streamlit e persistência | **PASSOU** |
 | **QA-INT-007** | Evolução histórica, filtros, isolamento, atualização e persistência | **PASSOU** |
+| **QA-INT-008** | Seleção controlada de mapas e integração | **APROVADO MANUALMENTE, COM OBSERVAÇÕES** |
 
 Os cenários verificam integridade de dados, transações, consultas SQL e métricas
 de desempenho.
@@ -134,7 +135,7 @@ A base `0c17c96` teve 167 testes e 100% de cobertura Python aprovados no GitHub
 Actions, conforme validação informada pelo usuário. O MVP Visual 1 (`6a8d43d`)
 também foi aprovado remotamente com 235 testes. Os 237 testes da manutenção
 anterior já foram aprovados no GitHub Actions, conforme informação do QA Lead.
-Os 260 testes do incremento atual foram aprovados localmente; sua execução remota está pendente.
+Os 260 testes da evolução já foram aprovados remotamente, conforme informação do QA Lead. Os 315 testes do seletor foram aprovados localmente; sua execução remota está pendente.
 
 ## Análise por mapa
 
@@ -169,7 +170,7 @@ podem produzir resultados pouco representativos.
 Somente performances do jogador entram no resumo, via JOIN parametrizado.
 As consultas não armazenam métricas nem executam commit, rollback ou close.
 QA-INT-005 foi executado pelo usuário em 29/10/2026, às 14:47:48 (UTC−03:00),
-e aprovado pelo QA Lead após revisão da captura. Os sete cenários manuais
+e aprovado pelo QA Lead após revisão da captura. Os oito cenários manuais
 estão documentados em QA.md. Os 235 testes do MVP foram aprovados no GitHub
 Actions; as duas regressões da manutenção também já foram aprovadas remotamente, totalizando 237, conforme informação do QA Lead. QA-INT-006 foi aprovado, incluindo os fluxos da interface e a persistência confirmada manualmente.
 
@@ -184,15 +185,15 @@ python -m streamlit run app.py
 
 O Streamlit mostra o endereço local no terminal. Cadastre um jogador na barra
 lateral (Steam ID opcional) e selecione-o. Use as abas Visão geral, Registrar
-partida, Histórico e Estatísticas por mapa para acompanhar seus resultados.
+partida, Histórico, Estatísticas por mapa e Evolução para acompanhar seus resultados.
 O tema nativo é escuro, com grafite e azul, configurado em `.streamlit/config.toml`.
 
 O formulário salva partida e performance juntas. Resultado e rounds jogados
 são definidos pelo placar; erros de integridade não deixam partida incompleta.
-O nome do mapa vira minúsculas, espaços viram `_` e nomes sem `_` recebem `de_`:
-Mirage, mirage e de_mirage ficam como de_mirage. Nomes personalizados com prefixo,
-como aim_custom e cs_office, são preservados após essa normalização. Registros
-antigos não são renomeados automaticamente.
+No formulário, o mapa é escolhido explicitamente no seletor e salvo com ID
+canônico. “Outro / Personalizado” permite texto com a normalização existente
+e orientação para nomes parecidos com os mapas do catálogo. Consulte a seção
+“Incremento — seleção controlada de mapas” abaixo. Registros antigos não são renomeados.
 
 Após salvar, clique em **Registrar outra partida** para abrir um formulário novo.
 Reruns não repetem a gravação. Essa proteção é temporária por sessão; reenviar
@@ -230,8 +231,8 @@ Steam ou hospedagem pública. A seleção de jogador organiza os dados, sem ofer
 controle de acesso. Gravações SQLite concorrentes podem exigir nova tentativa.
 Best/Worst Map continua sem mínimo de partidas: amostras pequenas podem ser pouco
 representativas. O MVP e sua manutenção foram publicados, com 237 testes aprovados no GitHub
-Actions conforme informação do QA Lead. O incremento atual tem 260 testes
-aprovados localmente e aguarda execução remota.
+Actions conforme informação do QA Lead. A evolução com 260 testes foi aprovada remotamente, conforme informação do QA Lead.
+O seletor tem 315 testes aprovados localmente e aguarda execução remota.
 
 
 ## MVP Visual 2 — Incremento 1: evolução histórica (2026-10-30)
@@ -281,8 +282,8 @@ git status --short
 ```
 
 Foi usado o Python do ambiente `.venv/Scripts/python.exe` do projeto.
-QA-INT-007 foi aprovado manualmente pelo QA Lead, com 15 capturas verificadas. Este incremento ainda não foi
-validado remotamente no GitHub Actions. Nenhum staging, commit ou push.
+QA-INT-007 foi aprovado manualmente pelo QA Lead, com 15 capturas verificadas. A evolução com 260 testes já foi
+aprovada remotamente, conforme informação do QA Lead neste fechamento. Nenhum staging, commit ou push.
 Limitações: séries descritivas, sem inferência estatística, suavização,
 paginação ou teste de carga; a consulta inicial carrega o histórico completo
 para montar filtros. Nomes dos mapas seguem os valores armazenados.
@@ -295,9 +296,9 @@ QA-INT-007 **aprovado manualmente**, com 15 capturas existentes verificadas em
 [QA.md](QA.md#qa-int-007--evolução-histórica-do-mvp-visual-2-incremento-1).
 A reinicialização do Streamlit foi informada pelo testador; as capturas
 posteriores mostram os dados. O histórico de 237 testes já foi publicado e
-aprovado no GitHub Actions, conforme informação do QA Lead. O incremento
-atual tem 260 testes aprovados **localmente**, conforme validação anterior e
-revalidação deste fechamento; execução remota dos 260 ainda pendente.
+aprovado no GitHub Actions, conforme informação do QA Lead. A evolução
+com 260 testes foi aprovada remotamente, conforme informação do QA Lead.
+O seletor tem 315 aprovados localmente e execução remota pendente.
 Os 100% de cobertura referem-se apenas a `src/`, sem incluir `app.py`.
 
 Melhorias futuras, sem implementação neste incremento:
@@ -309,3 +310,105 @@ Melhorias futuras, sem implementação neste incremento:
 Próximo passo: revisão final e autorização do QA Lead antes de staging,
 commit ou push. Relatórios locais e scripts `qa_evidencia_*.py` ficam fora
 da lista recomendada de publicação; bancos SQLite também ficam de fora.
+
+## Incremento — seleção controlada de mapas (2026-10-30)
+
+Na aba **Registrar partida**, escolha explicitamente o **Mapa** antes de
+preencher os demais dados. O seletor começa sem opção selecionada, inclusive
+ao abrir “Registrar outra partida”. Salvar sem escolha exibe orientação e não
+grava partida ou performance. O nome amigável é apresentado e o ID canônico
+é salvo. O catálogo não depende da rotação Active Duty.
+
+| Nome amigável | ID salvo |
+| --- | --- |
+| Mirage | de_mirage |
+| Inferno | de_inferno |
+| Nuke | de_nuke |
+| Dust II | de_dust2 |
+| Ancient | de_ancient |
+| Anubis | de_anubis |
+| Cache | de_cache |
+| Train | de_train |
+| Overpass | de_overpass |
+| Vertigo | de_vertigo |
+| Office | cs_office |
+
+**Outro / Personalizado** revela o campo de texto correspondente. Entrada
+vazia é rejeitada. Para um mapa customizado, a normalização existente continua:
+minúsculas, espaços convertidos em `_`, prefixo `de_` quando não há `_`.
+Exemplos: ` aim_custom ` → `aim_custom`; `Minha Arena` → `minha_arena`.
+Nomes/IDs exatos de mapas do catálogo digitados nesse campo convergem ao ID
+oficial: `Dust II` → `de_dust2`, `Office` → `cs_office`.
+
+No formulário, a comparação ignora caixa, espaços, `_`, hífens e prefixo
+`de_`/`cs_`. Uma aproximação com similaridade de pelo menos 0,8 por `difflib`
+é bloqueada com sugestão clara para selecionar o mapa oficial; não é corrigida
+silenciosamente. Exemplo: `mirrage` sugere Mirage. É uma heurística, sem
+garantia de detectar todo erro; um nome customizado muito próximo de um mapa
+do catálogo também pode ser bloqueado e precisa de nome distinto.
+
+O catálogo central está em `src/catalogo_mapas.py`: para ampliá-lo, adicione
+um par `(nome amigável, ID canônico)` a `CATALOGO_MAPAS`, mantendo IDs e nomes
+únicos. `NOMES_MAPAS` deriva as opções do seletor; `OUTRO_MAPA` identifica
+a opção personalizada. `resolver_mapa_formulario(selecao, personalizado="")`
+retorna o valor para gravação ou lança `ValueError` com orientação.
+
+Essa regra é exclusiva do formulário. A API e o comportamento de
+`src/app_servicos.py` não mudaram: chamadas diretas continuam aceitando texto
+livre e usando `normalizar_mapa`. Não há migração ou renomeação de registros
+anteriores. Por exemplo, `dust_ii` legado permanece separado de `de_dust2`.
+Schema, métricas, consultas, tema e evidências manuais existentes preservados.
+
+O seletor fica antes do `st.form`, pois a escolha precisa disparar rerun para
+mostrar/ocultar imediatamente o campo personalizado. Escolha o mapa primeiro:
+alterar o seletor durante o preenchimento pode descartar valores ainda não
+enviados pelo formulário. As chaves incluem jogador e geração do formulário,
+para impedir reaproveitamento da escolha entre jogadores ou novos registros.
+
+Validação local: **315 testes aprovados**, 260 anteriores e 55 novos
+(34 casos do catálogo e 21 de interface). AppTest usa `CS2_DB_PATH` temporário;
+nenhum teste acessa banco pessoal. Os testes anteriores de UI foram adaptados
+ao seletor, preservando suas verificações funcionais. Cobertura apenas de
+`src/`: **100%**, 158 statements e 46 branches; catálogo: 26 statements,
+10 branches, 100%. `app.py` não está incluído nessa medição.
+
+```powershell
+python -B -m pytest -q -p no:cacheprovider
+python -B -m pytest -q -p no:cacheprovider --cov=src --cov-branch --cov-report=term-missing
+git diff --check
+git status --short
+```
+
+Executados com `.venv/Scripts/python.exe` no Windows/Python 3.12.1.
+O seletor foi aprovado manualmente no QA-INT-008, com observações.
+A revisão documental final e a execução remota dos 315 testes permanecem pendentes. Sem novas dependências,
+staging, commit ou push neste incremento. Base: `main`, `8ed917455d48586938c5b2eb69c1e74dd88fa6df`.
+
+### Fechamento manual — QA-INT-008 (2026-10-30)
+
+**APROVADO MANUALMENTE, COM OBSERVAÇÕES**. As nove capturas existentes estão
+referenciadas nas seis etapas de [QA.md](QA.md#qa-int-008--seleção-controlada-de-mapas).
+Confirmados seleção obrigatória, Inferno como `de_inferno`, rejeição de
+`Ineferno`, custom `aim_custom` e integração com estatísticas/evolução.
+O catálogo continua com 11 mapas; a prevenção de nomes semelhantes é
+heurística e as regras/limitações descritas acima permanecem.
+
+O jogador QA_MAPAS_A terminou com quatro partidas: `de_inferno`, `aim_custom`,
+`de_mirage`, `de_nuke`. O testador relatou envio antecipado por Enter, deixando
+Damage e KAST Rounds de aim_custom em zero; os dados foram preservados.
+Na etapa de troca de mapa também houve envios acidentais. O testador informou
+que repetiu o procedimento e os campos permaneceram preenchidos; o print do
+histórico não comprova diretamente esse estado antes do envio. Não se oferece
+garantia geral de preservação de valores ainda não enviados em todos os reruns.
+
+Backlog, sem mudanças funcionais agora:
+
+- Prevenir envio acidental do formulário por Enter.
+- Avaliar confirmação dos dados antes da gravação.
+- Prevenir registros incompletos sem proibir zeros legítimos.
+
+Situação dos testes: **260 já aprovados remotamente**, conforme informação do
+QA Lead; **315 aprovados localmente** na versão do seletor, revalidados neste
+fechamento. **Execução remota dos 315 pendente**. Cobertura de 100% somente
+em `src/`, 158 statements e 46 branches; `app.py` fora dessa medição.
+Sem staging, commit ou push. Aguardar autorização do QA Lead.

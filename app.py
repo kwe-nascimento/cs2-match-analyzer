@@ -10,6 +10,7 @@ from src.app_servicos import (
     abrir_banco, cadastrar_jogador, listar_jogadores,
     salvar_partida_completa, validar_formulario,
 )
+from src.catalogo_mapas import NOMES_MAPAS, OUTRO_MAPA, resolver_mapa_formulario
 from src.consultas import listar_partidas
 from src.evolucao import listar_evolucao, resumir_evolucao
 from src.mapas import obter_estatisticas_mapas, obter_melhor_mapa, obter_pior_mapa
@@ -70,14 +71,23 @@ def formulario_partida(conn, player_id):
             st.rerun()
         return
     prefix = f"partida_{player_id}_{st.session_state.get('form_geracao', 0)}"
+    # Fora do form: a escolha dispara rerun para exibir o campo personalizado.
+    selecao_mapa = st.selectbox(
+        "Mapa", options=[*NOMES_MAPAS, OUTRO_MAPA], index=None,
+        placeholder="Selecione um mapa",
+        format_func=lambda valor: "Outro / Personalizado" if valor == OUTRO_MAPA else NOMES_MAPAS[valor],
+        key=prefix + "_mapa",
+    )
     with st.form(prefix):
-        c1, c2 = st.columns(2)
-        data_partida = c1.date_input("Data da partida", value=date.today(), key=prefix + "_data")
-        mapa = c2.text_input("Mapa", placeholder="Ex.: Mirage, de_nuke ou aim_custom", key=prefix + "_mapa")
+        personalizado = ""
+        if selecao_mapa == OUTRO_MAPA:
+            personalizado = st.text_input("Mapa personalizado", placeholder="Ex.: aim_custom",
+                                          key=prefix + "_personalizado")
+        data_partida = st.date_input("Data da partida", value=date.today(), key=prefix + "_data")
         c1, c2 = st.columns(2)
         rounds_time = c1.number_input("Rounds do time", min_value=0, value=13, step=1, key=prefix + "_time")
         rounds_adversario = c2.number_input("Rounds do adversário", min_value=0, value=7, step=1, key=prefix + "_adversario")
-        st.caption("Nomes simples como Mirage viram de_mirage. Mapas personalizados são aceitos.")
+        st.caption("Escolha um mapa do catálogo ou Outro / Personalizado. O catálogo não representa a rotação Active Duty.")
         st.markdown("#### Performance individual")
         columns = st.columns(3)
         performance = {
@@ -86,6 +96,11 @@ def formulario_partida(conn, player_id):
         }
         salvar = st.form_submit_button("Salvar partida", type="primary", use_container_width=True)
     if salvar:
+        try:
+            mapa = resolver_mapa_formulario(selecao_mapa, personalizado)
+        except ValueError as exc:
+            st.error(str(exc))
+            return
         erros = validar_formulario(data_partida, mapa, rounds_time, rounds_adversario, performance)
         if erros:
             for erro in erros:
