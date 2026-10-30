@@ -11,6 +11,7 @@ from src.app_servicos import (
     salvar_partida_completa, validar_formulario,
 )
 from src.consultas import listar_partidas
+from src.evolucao import listar_evolucao, resumir_evolucao
 from src.mapas import obter_estatisticas_mapas, obter_melhor_mapa, obter_pior_mapa
 from src.metricas import obter_resumo_jogador
 
@@ -153,6 +154,54 @@ def estatisticas_mapas(conn, player_id):
     st.caption("Classificação: Win Rate, ADR e K/D decrescentes; nome crescente. Amostras pequenas podem ser pouco representativas.")
 
 
+
+def evolucao(conn, player_id):
+    st.subheader("Evolução histórica")
+    historico_completo = listar_evolucao(conn, player_id)
+    if not historico_completo:
+        st.info("Sua evolução aparecerá aqui após a primeira partida.")
+        return
+    # A assinatura renova padrões após registros novos; cada jogador tem filtros próprios.
+    assinatura = f"evolucao_{player_id}_{len(historico_completo)}_{max(r['partida_id'] for r in historico_completo)}"
+    mapas = sorted({r["mapa"] for r in historico_completo})
+    c1, c2, c3 = st.columns(3)
+    mapa = c1.selectbox("Mapa da evolução", [None, *mapas],
+                        format_func=lambda m: "Todos" if m is None else m,
+                        key=assinatura + "_mapa")
+    inicio = c2.date_input("Data inicial", value=date.fromisoformat(historico_completo[0]["data_partida"]),
+                           key=assinatura + "_inicio")
+    fim = c3.date_input("Data final", value=date.fromisoformat(historico_completo[-1]["data_partida"]),
+                        key=assinatura + "_fim")
+    if inicio is None or fim is None or inicio > fim:
+        st.warning("Informe um período válido: a data inicial deve ser anterior ou igual à data final.")
+        return
+    registros = listar_evolucao(conn, player_id, mapa, inicio, fim)
+    resumo = resumir_evolucao(registros)
+    if resumo is None:
+        st.info("Nenhuma partida encontrada para os filtros selecionados.")
+        return
+    for coluna, campo, titulo, sufixo in zip(
+        st.columns(4), ["partidas", "kd", "adr", "kast_percent"],
+        ["Partidas filtradas", "K/D filtrado", "ADR filtrado", "KAST% filtrado"], ["", "", "", "%"],
+    ):
+        valor = str(resumo[campo]) if campo == "partidas" else f"{resumo[campo]:.2f}{sufixo}"
+        coluna.metric(titulo, valor)
+    st.caption("Indicadores calculados pelos totais filtrados; arredondamento apenas na apresentação.")
+    linhas = [
+        {"Ordem": i, "ID": r["partida_id"], "Data": r["data_partida"], "Mapa": r["mapa"],
+         "Resultado": r["resultado"], "K/D": r["kd"], "ADR": r["adr"], "KAST%": r["kast_percent"]}
+        for i, r in enumerate(registros, 1)
+    ]
+    if len(registros) == 1:
+        st.info("Apenas uma partida no intervalo: os valores não indicam uma tendência estatística.")
+    else:
+        for campo in ["K/D", "ADR", "KAST%"]:
+            st.markdown(f"#### Evolução de {campo} por partida")
+            st.line_chart(linhas, x="Ordem", y=campo, color="#3b82f6")
+    st.dataframe(linhas, hide_index=True, use_container_width=True)
+    st.caption("Ordem cronológica crescente; datas iguais são desempatadas pelo ID da partida. Consulte datas e mapas pela ordem da tabela.")
+
+
 def main():
     st.set_page_config(page_title="CS2 Match Analyzer", page_icon="🎯", layout="wide")
     try:
@@ -165,7 +214,7 @@ def main():
             if player_id is None:
                 st.info("Bem-vindo! Cadastre um jogador na barra lateral para acompanhar sua evolução.")
                 return
-            tabs = st.tabs(["Visão geral", "Registrar partida", "Histórico", "Estatísticas por mapa"])
+            tabs = st.tabs(["Visão geral", "Registrar partida", "Histórico", "Estatísticas por mapa", "Evolução"])
             # Processa submissão antes de renderizar consultas: um rerun atualiza todas as abas.
             with tabs[1]:
                 formulario_partida(conn, player_id)
@@ -175,6 +224,8 @@ def main():
                 historico(conn, player_id)
             with tabs[3]:
                 estatisticas_mapas(conn, player_id)
+            with tabs[4]:
+                evolucao(conn, player_id)
     except (sqlite3.OperationalError, OSError):
         LOGGER.exception("Falha ao acessar o banco local")
         st.error("Não foi possível acessar o banco local. Verifique permissões, espaço disponível ou se outro processo está gravando e tente novamente.")

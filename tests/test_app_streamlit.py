@@ -93,6 +93,7 @@ def test_registro_dashboard_historico_e_reruns(app_env):
     assert any("registradas com sucesso" in s.value for s in app.success)
     metricas = {m.label: m.value for m in app.metric}
     assert metricas["Partidas"] == "1"
+    assert metricas["Partidas filtradas"] == "1"
     assert metricas["K/D"] == "2.00"
     assert metricas["ADR"] == "100.00"
     assert metricas["Win Rate"] == "100.00%"
@@ -156,3 +157,77 @@ def test_erro_banco_amigavel(app_env, monkeypatch):
     monkeypatch.setenv("CS2_DB_PATH", str(app_env.parent))  # Diretório não é banco.
     app = iniciar()
     assert any("Não foi possível acessar" in e.value for e in app.error)
+
+
+def preparar_evolucao():
+    with abrir_banco() as conn:
+        eu = cadastrar_jogador(conn, "eu")
+        colega = cadastrar_jogador(conn, "colega")
+        stats = dict(kills=10, deaths=0, assists=2, headshots=1, damage=1000,
+                     utility_damage=0, enemies_blinded=0, flash_assists=0,
+                     first_kills=0, first_deaths=0, kast_rounds=3)
+        salvar_partida_completa(conn, eu, date(2026, 10, 1), "Mirage", 13, 0, stats)
+        stats.update(kills=30, deaths=10, damage=2001, kast_rounds=17)
+        salvar_partida_completa(conn, eu, date(2026, 10, 3), "Nuke", 13, 7, stats)
+    return eu, colega, stats
+
+
+def aba_evolucao(app):
+    return next(t for t in app.tabs if t.label == "Evolução")
+
+
+def test_evolucao_aba_vazia(app_env):
+    app = iniciar()
+    cadastrar(app, "eu")
+    aba = aba_evolucao(app)
+    assert any("primeira partida" in i.value for i in aba.info)
+    assert not aba.metric
+    assert not aba.dataframe
+
+
+def test_evolucao_filtros_totais_e_intervalo_invalido(app_env):
+    preparar_evolucao()
+    app = iniciar()
+    app.selectbox(key="jogador").select(1).run()
+    aba = aba_evolucao(app)
+    assert {m.label: m.value for m in aba.metric} == {
+        "Partidas filtradas": "2", "K/D filtrado": "4.00",
+        "ADR filtrado": "90.94", "KAST% filtrado": "60.61%"}
+    assert len(aba.get("vega_lite_chart")) == 3
+    assert list(aba.dataframe[0].value["Ordem"]) == [1, 2]
+    aba.selectbox[0].select("de_nuke").run()
+    aba = aba_evolucao(app)
+    assert aba.metric[0].value == "1"
+    assert any("tendência" in i.value for i in aba.info)
+    assert not aba.get("vega_lite_chart")
+    aba.date_input[1].set_value(date(2026, 10, 2)).run()
+    assert any("Nenhuma partida encontrada" in i.value for i in aba_evolucao(app).info)
+    aba_evolucao(app).date_input[0].set_value(date(2026, 10, 4)).run()
+    assert aba_evolucao(app).warning
+    assert not aba_evolucao(app).metric
+    assert not app.exception
+
+
+def test_evolucao_isolamento_atualizacao_e_datas_iguais(app_env):
+    eu, colega, stats = preparar_evolucao()
+    app = iniciar()
+    app.selectbox(key="jogador").select(eu).run()
+    aba_evolucao(app).selectbox[0].select("de_nuke").run()
+    app.selectbox(key="jogador").select(colega).run()
+    assert not aba_evolucao(app).dataframe
+    assert not aba_evolucao(app).metric
+    app.selectbox(key="jogador").select(eu).run()
+    assert aba_evolucao(app).selectbox[0].value in (None, "de_nuke")
+    with abrir_banco() as conn:
+        salvar_partida_completa(conn, eu, date(2026, 10, 3), "Inferno", 13, 7, stats)
+        salvar_partida_completa(conn, eu, date(2026, 10, 5), "Mirage", 13, 7, stats)
+        antes = dados(conn)
+    app.run()
+    aba = aba_evolucao(app)
+    assert aba.selectbox[0].value is None
+    assert aba.date_input[1].value == date(2026, 10, 5)
+    assert aba.metric[0].value == "4"
+    assert list(aba.dataframe[0].value["Mapa"]) == ["de_mirage", "de_nuke", "de_inferno", "de_mirage"]
+    with abrir_banco() as conn:
+        assert dados(conn) == antes
+    assert not app.exception

@@ -6,12 +6,12 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 ## 📍 Onde estou
 - Modelagem inicial do banco de dados SQLite concluída.
 - Schema SQL implementado com regras de integridade.
-- 237 testes automatizados aprovados localmente: 235 anteriores preservados e duas novas regressões transacionais. Manutenção ainda não publicada nem executada remotamente.
+- 260 testes automatizados aprovados localmente: 237 anteriores preservados e 23 novos. A manutenção anterior com 237 já foi publicada e aprovada no GitHub Actions, conforme informação do QA Lead; execução remota dos 260 pendente.
 - MVP Visual 1 publicado no commit `6a8d43d`: 235 testes aprovados no GitHub Actions, Linux/Python 3.12.15, src com 100% (106 statements e 26 branches); [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660).
-- Base `0c17c96`: 167 testes e 100% de cobertura Python aprovados no GitHub Actions, conforme validação informada pelo usuário. A suíte atual da manutenção (237 testes locais) aguarda publicação e execução remota.
+- Base `0c17c96`: 167 testes e 100% de cobertura Python aprovados no GitHub Actions, conforme validação informada pelo usuário. A manutenção com 237 testes já foi publicada e aprovada remotamente, conforme informação do QA Lead. Os 260 testes do incremento atual aguardam execução remota.
 - Commit `289c378`: 138 testes aprovados no GitHub Actions; [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
-- Seis cenários manuais de integração documentados e aprovados; QA-INT-006 concluído pelo usuário em 29/10/2026, incluindo persistência após reinicializar o Streamlit. QA-INT-005 preservado com sua execução em 29/10/2026 às 14:47:48 (UTC−03:00).
-- Cobertura local desta manutenção: src com 100% (108 statements, 28 branches); app.py com 98% na medição separada da validação local anterior.
+- Sete cenários manuais de integração documentados e aprovados; QA-INT-007 aprovado manualmente neste fechamento; QA-INT-006 concluído pelo usuário em 29/10/2026, incluindo persistência após reinicializar o Streamlit. QA-INT-005 preservado com sua execução em 29/10/2026 às 14:47:48 (UTC−03:00).
+- Cobertura local do incremento: apenas src/ com 100% (132 statements, 36 branches). app.py não está incluído nessa medição; 98% refere-se a uma medição separada anterior.
 - Pipeline de CI configurado com GitHub Actions.
 - Repositório publicado e versionado no GitHub.
 - Registro de partidas implementado em `src/registros.py`.
@@ -22,8 +22,9 @@ Sistema em Python + SQL que registra minhas partidas de CS2 e calcula métricas 
 
 ## ➡️ PRÓXIMO PASSO
 MVP visual 1 publicado em `6a8d43d` e aprovado remotamente com 235 testes.
-Aguardar revisão do QA Lead para publicar a manutenção transacional/Actions,
-validada com 237 testes locais; sem commit ou push nesta sessão.
+A manutenção transacional/Actions com 237 testes já foi publicada e aprovada
+remotamente, conforme informação do QA Lead. Aguardar revisão final do incremento
+com 260 testes locais e QA-INT-007 aprovado; sem staging, commit ou push nesta sessão.
 
 ## ✅ Decisões tomadas (não rediscutir)
 - Banco guarda só dados brutos; métricas são calculadas depois
@@ -264,7 +265,86 @@ e as duas regressões correspondentes foram concluídas na manutenção abaixo.
   confirmam node24; configurações de runner ubuntu-latest, Python 3.12,
   eventos, dependências e pytest-cov preservadas. YAML analisado com parser.
 - Validação local: 237 testes aprovados; src com 100%, 108 statements e 28 branches.
-  A manutenção ainda aguarda publicação/CI; YAML válido não prova a execução das
-  Actions. A ausência do aviso de Node.js 20 será conferida nos próximos logs.
-- Seis cenários manuais e suas evidências preservados integralmente; sem QA-INT-007.
+  Na validação original, a publicação/CI ainda estava pendente. No fechamento
+  de 30/10/2026, o QA Lead informou que essa manutenção com 237 testes já foi
+  publicada e aprovada no GitHub Actions; não foi inventado um link de execução.
+- Naquela manutenção, seis cenários manuais e suas evidências foram preservados;
+  o QA-INT-007 foi acrescentado e aprovado no fechamento de 30/10/2026.
 - Nenhuma nova dependência, tela, métrica ou alteração visual. Sem commit ou push.
+
+
+## MVP Visual 2 — Incremento 1: evolução histórica (2026-10-30)
+
+A aba **Evolução** apresenta K/D, ADR e KAST% por partida, em ordem de data
+crescente e, em datas iguais, ID crescente. O eixo horizontal usa o número
+sequencial da partida filtrada; a tabela auxiliar identifica ID, data, mapa,
+resultado e valores. Os três gráficos usam `st.line_chart`, com azul explícito,
+preservando o tema existente e sem dependências adicionais.
+
+Filtros: Todos ou um mapa registrado pelo jogador, data inicial e final
+inclusivas. Os padrões abrangem todo o histórico. Intervalo invertido ou data
+ausente recebe orientação; filtros sem resultados e jogador sem partidas têm
+mensagens próprias. Uma partida mostra valores e tabela, com aviso de que não
+permite inferir tendência, sem traçar uma linha de evolução.
+
+Os indicadores são razões dos totais filtrados: kills / max(1, deaths),
+damage / rounds_played e kast_rounds / rounds_played * 100. Não são médias
+das métricas individuais. Backend sem arredondamento; indicadores com duas
+casas na apresentação. O schema garante rounds_played > 0.
+
+API: `src.evolucao.listar_evolucao(conn, player_id, mapa=None,
+data_inicial=None, data_final=None)` retorna lista de dicionários com dados
+brutos e métricas; datas aceitam `date` ou strings ISO YYYY-MM-DD. Mapa usa
+igualdade exata; `None` omite filtros opcionais. Intervalo invertido retorna
+lista vazia. `resumir_evolucao(registros)` retorna indicadores agregados ou
+`None` sem registros. Consultas parametrizadas, sem escrita ou controle da
+conexão/transação. Validação de formato de datas externas cabe ao chamador.
+
+Não há cache de consultas: reruns refletem novos registros. Filtros têm chaves
+por jogador e assinatura do histórico; novo registro restaura os padrões para
+incluir todo o histórico. Ao alternar jogadores os filtros não se misturam;
+o Streamlit pode descartar o estado de widgets que deixam de ser renderizados.
+
+Validação **local**, Windows/Python 3.12.1: 260 testes aprovados (237 anteriores
+e 23 novos), com bancos temporários. Os testes incluem AppTest, filtros,
+precisão, isolamento, SQL parametrizado, preservação da transação e reruns.
+Cobertura de `src`: 100%, 132 statements, 36 branches; `evolucao.py`: 100%,
+24 statements, 8 branches. Essa medição não inclui `app.py`.
+Comandos executados:
+
+```powershell
+python -B -m pytest -q -p no:cacheprovider
+python -B -m pytest -q -p no:cacheprovider --cov=src --cov-branch --cov-report=term-missing
+git diff --check
+git status --short
+```
+
+Foi usado o Python do ambiente `.venv/Scripts/python.exe` do projeto.
+QA-INT-007 foi aprovado manualmente pelo QA Lead, com 15 capturas verificadas. Este incremento ainda não foi
+validado remotamente no GitHub Actions. Nenhum staging, commit ou push.
+Limitações: séries descritivas, sem inferência estatística, suavização,
+paginação ou teste de carga; a consulta inicial carrega o histórico completo
+para montar filtros. Nomes dos mapas seguem os valores armazenados.
+Avisos de depreciação de `use_container_width` no Streamlit permanecem no
+aplicativo existente; não foi realizada migração visual ampla.
+
+### Fechamento do QA-INT-007 e backlog
+
+QA-INT-007 **aprovado manualmente**, com 15 capturas existentes verificadas em
+[QA.md](QA.md#qa-int-007--evolução-histórica-do-mvp-visual-2-incremento-1).
+A reinicialização do Streamlit foi informada pelo testador; as capturas
+posteriores mostram os dados. O histórico de 237 testes já foi publicado e
+aprovado no GitHub Actions, conforme informação do QA Lead. O incremento
+atual tem 260 testes aprovados **localmente**, conforme validação anterior e
+revalidação deste fechamento; execução remota dos 260 ainda pendente.
+Os 100% de cobertura referem-se apenas a `src/`, sem incluir `app.py`.
+
+Melhorias futuras, sem implementação neste incremento:
+
+- Atualizar a identificação antiga `MVP VISUAL 1` na sidebar.
+- Ajustar escala e apresentação dos gráficos.
+- Reformular visualmente o dashboard.
+
+Próximo passo: revisão final e autorização do QA Lead antes de staging,
+commit ou push. Relatórios locais e scripts `qa_evidencia_*.py` ficam fora
+da lista recomendada de publicação; bancos SQLite também ficam de fora.

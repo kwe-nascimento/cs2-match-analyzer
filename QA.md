@@ -12,10 +12,11 @@ Documentação dos cenários de integração do **CS2 Match Analyzer**, projeto 
 | **QA-INT-004** | Validação das métricas de desempenho | Cálculos individuais e acumulados | 28/10/2026 | **PASSOU** |
 | **QA-INT-005** | Análise de desempenho por mapa | Agregação, classificação e isolamento | 29/10/2026 | **PASSOU** |
 | **QA-INT-006** | Validação funcional da interface Streamlit | Fluxos de UI, isolamento e persistência | 29/10/2026 | **PASSOU** |
+| **QA-INT-007** | Evolução histórica | Filtros, gráficos, isolamento, atualização e persistência | Registro em 30/10/2026 | **PASSOU** |
 
-**Ambiente:** Python 3.12; QA-INT-001 a QA-INT-005 em SQLite em memória; QA-INT-006 na interface local Streamlit com SQLite persistente.
+**Ambiente:** Python 3.12; QA-INT-001 a QA-INT-005 em SQLite em memória; QA-INT-006 e QA-INT-007 na interface local Streamlit com SQLite persistente; QA-INT-007 com banco isolado de QA.
 
-**Execução:** QA-INT-001 a QA-INT-005 realizados por scripts Python iniciados manualmente no terminal, com verificações por `assert`; QA-INT-006 executado pelo usuário no navegador, incluindo reinicialização do Streamlit.
+**Execução:** QA-INT-001 a QA-INT-005 realizados por scripts Python iniciados manualmente no terminal, com verificações por `assert`; QA-INT-006 e QA-INT-007 executados pelo testador no navegador, incluindo reinicialização do Streamlit informada manualmente.
 
 **Escopo:** integração entre as funções Python e o banco SQLite; as capturas abaixo são evidências das execuções dos cenários.
 
@@ -482,16 +483,165 @@ originais; nem todas as etapas possuem evidência visual independente.
 
 ---
 
+## QA-INT-007 — Evolução histórica do MVP Visual 2, Incremento 1
+
+| Campo | Detalhe |
+| --- | --- |
+| Tipo | Validação manual de interface, filtros, isolamento, atualização e persistência |
+| Prioridade | Alta |
+| Registro documental | 30/10/2026; horário da execução não informado |
+| Ambiente | Windows, Python 3.12, Streamlit local no navegador e SQLite persistente isolado para QA |
+| Banco do cenário | `data/qa_int_007_20261030.sqlite`, arquivo existente, consultado somente para leitura neste fechamento |
+| Base | `main`, commit `5cd0e6d`; incremento local com `src/evolucao.py` |
+| Status | **PASSOU — aprovado manualmente pelo QA Lead** |
+
+### Objetivo e pré-condições
+
+Validar a aba Evolução: estados vazio e de uma partida, razões agregadas,
+três gráficos, filtros de mapa e período inclusivo, intervalo inválido,
+isolamento entre jogadores, atualização após registro e persistência.
+
+Pré-condições: dependências instaladas, incremento disponível e Streamlit
+iniciado com banco de QA isolado selecionado por `CS2_DB_PATH`. Os jogadores
+do cenário são `QA_EVOLUCAO_A` e `QA_EVOLUCAO_B`; A inicia sem partidas e B
+permanece sem partidas para verificar isolamento. As capturas não mostram o
+comando de inicialização nem o caminho efetivamente selecionado; o arquivo
+isolado foi confirmado no diretório e seus três registros de A foram consultados
+por SQLite URI `mode=ro&immutable=1`, sem gravação ou transação de escrita.
+Essa consulta complementar não prova qual caminho o processo Streamlit usou.
+
+### Dados utilizados e fontes da conferência
+
+As três partidas estão associadas a `QA_EVOLUCAO_A`. A tabela abaixo transcreve
+os dados apresentados pela interface, sem inferir valores brutos ausentes.
+
+| Ordem / ID | Data | Mapa | Resultado | K/D | ADR | KAST% |
+| --- | --- | --- | --- | ---: | ---: | ---: |
+| 1 / 1 | 20/10/2026 | de_mirage | vitoria | 2 | 100 | 75 |
+| 2 / 2 | 22/10/2026 | de_nuke | derrota | 0,66667 (apresentação da tabela) | 60 | 50 |
+| 3 / 3 | 22/10/2026 | de_inferno | vitoria | 3 | 90 | 80 |
+
+Os dados brutos abaixo foram confirmados por consulta **somente leitura** ao
+banco isolado `data/qa_int_007_20261030.sqlite`, como conferência complementar;
+não estão visíveis nos prints e não foram inferidos a partir das razões.
+
+| ID | Placar time × adversário | Kills | Deaths | Assists | Headshots | Damage | Rounds played | KAST rounds |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 13 × 7 | 20 | 10 | 5 | 8 | 2000 | 20 | 15 |
+| 2 | 7 × 13 | 10 | 15 | 3 | 4 | 1200 | 20 | 10 |
+| 3 | 13 × 7 | 15 | 5 | 4 | 6 | 1800 | 20 | 16 |
+
+Totais após duas partidas: 30 kills, 25 deaths, 3200 damage, 40 rounds,
+25 KAST rounds → K/D 1,20; ADR 80,00; KAST% 62,50%.
+Totais após três: 45 kills, 30 deaths, 5000 damage, 60 rounds,
+41 KAST rounds → K/D 1,50; ADR 83,33; KAST% 68,33%, arredondados na UI.
+Os cálculos pelos totais também têm validação automatizada separada.
+
+### Sete etapas executadas: esperado, observado e evidências
+
+#### 1. Estado inicial
+
+Cadastrar e selecionar A; abrir Evolução antes do primeiro registro.
+Esperado: confirmação de cadastro e mensagem de histórico vazio, sem métricas
+ou gráficos. Observado: cadastro confirmado e “Sua evolução aparecerá aqui
+após a primeira partida”. **PASSOU**.
+
+![Cadastro inicial](docs/evidencias/QA-INT-007-CADASTROEVO.png)
+![Evolução vazia](docs/evidencias/QA-INT-007-EMPTYEVO.png)
+
+#### 2. Primeira partida
+
+Registrar Mirage de 20/10/2026 e consultar Evolução. Esperado e observado:
+1 partida, K/D 2,00, ADR 100,00 e KAST% 75,00%; tabela com ID 1 e aviso de
+que uma partida não indica tendência estatística, sem linha de evolução.
+**PASSOU**. A captura registra o resultado, não o preenchimento do formulário.
+
+![Uma partida e aviso de amostra isolada](docs/evidencias/QA-INT-007-ONEEVO.png)
+
+#### 3. Gráficos e agregação
+
+Registrar Nuke de 22/10/2026. Esperado e observado: 2 partidas, K/D 1,20,
+ADR 80,00 e KAST% 62,50%; três gráficos azuis e tabela na ordem Mirage/Nuke,
+com datas e IDs identificáveis. **PASSOU**.
+
+![Indicadores de duas partidas](docs/evidencias/QA-INT-007-GRAFICOEVO.png)
+![Três gráficos e tabela de duas partidas](docs/evidencias/QA-INT-007-GRAFICOSEVO.png)
+
+#### 4. Filtros de mapa e período
+
+Selecionar de_nuke no intervalo de 20 a 22/10: esperado e observado 1 partida,
+K/D 0,67, ADR 60,00 e KAST% 50,00%. Manter de_nuke e limitar ambas as datas
+a 20/10: esperado e observado “Nenhuma partida encontrada para os filtros
+selecionados”. Selecionar Todos com início e fim em 20/10: esperado e
+observado Mirage incluída, 1 partida e seus valores 2,00/100,00/75,00%.
+Este último caso evidencia inclusão simultânea dos limites iguais. **PASSOU**.
+
+![Filtro individual de mapa](docs/evidencias/QA-INT-007-TESTEMAPAINDIVIDUAL.png)
+![Combinação de filtros sem resultados](docs/evidencias/QA-INT-007-FILTRODATA.png)
+![Período inclusivo com limites iguais](docs/evidencias/QA-INT-007-ALLFILTRODATA.png)
+
+#### 5. Intervalo inválido
+
+Definir início 23/10 e fim 20/10: esperado e observado aviso amigável de
+período inválido, sem indicadores ou gráficos. **PASSOU**.
+
+![Intervalo inválido](docs/evidencias/QA-INT-007-PERIODOINVALIDO.png)
+
+#### 6. Isolamento entre jogadores
+
+Selecionar B, sem partidas, e retornar a A. Esperado: B não recebe o histórico
+de A; A recupera seus próprios resultados. Observado: B com mensagem de
+estado vazio; retorno a A com 2 partidas, K/D 1,20, ADR 80,00 e KAST% 62,50%.
+**PASSOU**.
+
+![Jogador B sem histórico de A](docs/evidencias/QA-INT-007-EVOLUCAOB.png)
+![Retorno ao jogador A](docs/evidencias/QA-INT-007-SWITCHEVOS.png)
+
+#### 7. Atualização e persistência
+
+Registrar Inferno em 22/10/2026, mesma data de Nuke. Esperado e observado:
+3 partidas, K/D 1,50, ADR 83,33 e KAST% 68,33%; gráficos e tabela atualizados.
+Tabela em ordem 1/Mirage/20-10, 2/Nuke/22-10, 3/Inferno/22-10: desempate
+por ID crescente entre as duas partidas da mesma data. **PASSOU**.
+
+![Indicadores atualizados com três partidas](docs/evidencias/QA-INT-007-TERCEIRAPARTIDA.png)
+![Gráficos e ordenação com desempate por ID](docs/evidencias/QA-INT-007-TERCEIRAPARTIDA2.png)
+
+O testador informou que encerrou e reiniciou o Streamlit e selecionou A.
+Esperado: mesmos três registros e indicadores. Observado nas capturas
+posteriores: 3 partidas, K/D 1,50, ADR 83,33 e KAST% 68,33%, além dos três
+registros na mesma ordem. **PASSOU**, combinando relato do testador com
+evidência visual do estado posterior. As imagens isoladas não comprovam a
+sequência de encerramento e reinicialização do processo.
+
+![Indicadores após reinicialização informada](docs/evidencias/QA-INT-007-PERSISTENCIADADOS.png)
+![Tabela após reinicialização informada](docs/evidencias/QA-INT-007-PERSISTENCIADADOS2.png)
+
+### Conclusão e limites da evidência
+
+**PASSOU.** Aprovação manual registrada por solicitação do QA Lead. As 15
+imagens foram encontradas, abertas e conferidas com seus nomes reais; nenhuma
+ausente, criada, renomeada ou modificada. A ordem acima é a ordem funcional
+do cenário, não uma inferência de horários de captura.
+
+A evidência documenta os estados visíveis, não todos os dados de entrada nem
+uma gravação contínua das ações. A identificação do banco no processo e a
+reinicialização não têm captura independente. O teste não é teste de carga
+nem prova de tendência estatística. A aprovação manual é independente dos
+260 testes locais; a execução remota dos 260 permanece pendente.
+
+---
+
 ## Limitações e observações
 
-- QA-INT-001 a QA-INT-005 usam **SQLite em memória**. QA-INT-006 usa SQLite persistente na interface local, com reinicialização confirmada manualmente pelo usuário e captura complementar do estado restaurado.
+- QA-INT-001 a QA-INT-005 usam **SQLite em memória**. QA-INT-006 usa SQLite persistente na interface local, com reinicialização confirmada manualmente pelo usuário e captura complementar do estado restaurado. QA-INT-007 usa banco isolado de QA, com relato de reinicialização e capturas do estado posterior.
 - Os casos cobrem os comportamentos específicos descritos, sem representar cobertura completa das funcionalidades.
 - As capturas de QA-INT-001 e QA-INT-002 documentam reexecuções dos cenários originalmente realizados no console interativo.
 - Os scripts de evidência foram executados localmente e, até esta revisão, não fazem parte do repositório publicado.
-- A suíte automatizada do projeto é **separada** destes seis cenários manuais documentados: **235 testes do MVP Visual 1 aprovados localmente e no GitHub Actions**, sendo **195 anteriores preservados e 40 novos testes de serviços e interface**. O commit `6a8d43d` passou no Linux com Python 3.12.15 e 100% de cobertura em `src/` (106 statements e 26 branches): [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660). A manutenção atual soma **237 testes aprovados localmente** (235 anteriores e duas novas regressões); sua execução remota ainda está pendente. A manutenção da base `0c17c96` já foi aprovada remotamente com 167 testes e 100% de cobertura Python, conforme validação informada pelo usuário. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
+- A suíte automatizada do projeto é **separada** destes sete cenários manuais documentados: **235 testes do MVP Visual 1 aprovados localmente e no GitHub Actions**, sendo **195 anteriores preservados e 40 novos testes de serviços e interface**. O commit `6a8d43d` passou no Linux com Python 3.12.15 e 100% de cobertura em `src/` (106 statements e 26 branches): [execução remota aprovada](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40942192660). A manutenção anterior soma **237 testes aprovados e já publicados no GitHub Actions**, conforme informação do QA Lead neste fechamento. O incremento atual soma **260 testes aprovados localmente**; sua execução remota está pendente. A cobertura de 100% aqui informada abrange apenas `src/`, não `app.py`. A manutenção da base `0c17c96` já foi aprovada remotamente com 167 testes e 100% de cobertura Python, conforme validação informada pelo usuário. O commit `289c378` também teve os 138 testes aprovados no GitHub Actions: [execução confirmada de 28/10/2026](https://github.com/kwe-nascimento/cs2-match-analyzer/actions/runs/40775358994).
 
 ## Resultado geral
 
-**6 cenários de integração executados — 6 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
+**7 cenários de integração executados — 7 aprovados — nenhuma falha identificada nos comportamentos avaliados.**
 
 A documentação reúne procedimentos, resultados esperados, resultados obtidos e evidências visuais para apoiar a revisão técnica e a evolução do portfólio de QA.
